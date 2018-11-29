@@ -4,5 +4,7 @@
 * Create a node and a link in D3.
 * Create an SVG container
 * Instantiate the nodes and links
+* Add xml-js
 
 # TODO
+* Parse WFD into a JS object with an XML parser

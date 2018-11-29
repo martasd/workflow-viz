@@ -23,6 +23,7 @@
     "core-js": "^2.5.4",
     "d3": "^5.7.0",
     "rxjs": "~6.3.3",
+    "xml-js": "^1.6.8",
     "zone.js": "~0.8.26"
   },
   "devDependencies": {

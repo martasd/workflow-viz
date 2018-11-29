@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import * as d3 from 'd3';
 import { Node } from './d3/models';
+import { ParseWorkflowService } from './parse-workflow.service';
 
 /* Draw the nodes and links in an SVG container
 
@@ -14,7 +15,90 @@ import { Node } from './d3/models';
 export class AppComponent {
   title = 'workflow-viz';
 
-  constructor() {
+  constructor(private parseWorkflowService: ParseWorkflowService) {
+
+    var wfd =
+      `<workflow>
+    <initial-actions>
+        <!-- Display the initial eForm to show LEP Channel data -->
+        <action id="1" name="Display LEP Channel">
+            <restrict-to>
+                <conditions type="AND">
+                    <condition type="class">
+                        <arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+                        <!-- FOR INITIAL ACTION 1 USE ROLE CZIP Create Message -->
+                        <arg name="roleId">Routing</arg>
+                    </condition>
+                </conditions>
+            </restrict-to>
+            <results>
+                <unconditional-result old-status="Finished" status="NewMessageCreated" step="1">
+                    <post-functions>
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.CreateMessageFunction</arg>
+                        </function>
+                        <!-- Set any tag you want for this message. Use +[tagname] to add and -[tagname] to remove. Multiples are possible via comma seperation (+Query,-FIN,+Billing) -->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+                            <arg name="tagInfo">+Display_LEP</arg>
+                        </function>
+                        <!-- Set comment that will be displayed in the History trail of this message-->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+                            <arg name="ipc.messagePrint.comment">Created new LEP Channel message</arg>
+                        </function>
+                        <!-- Persist changes -->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+                        </function>
+                    </post-functions>
+                </unconditional-result>
+            </results>
+        </action>
+    </initial-actions>
+    <steps>
+        <step id="1" name="Placeholder">
+            <actions>
+                <action id="101" name="Placeholder">
+                    <!-- cancels the current action by only adding history item and jumping back to overview by calling the Navigation Function -->
+                    <results>
+                        <unconditional-result old-status="Finished" status="Cancel" step="-1">
+                            <post-functions>
+                                <!-- See incentage help for more details https://doc.incentage.com/display/IPC/Workflow+Functions -->
+                                <!-- Terminate the workflow without saving anything -->
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.TerminateWorkflowFunction</arg>
+                                </function>
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+                                </function>
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.NavigationFunction</arg>
+                                    <arg name="view">messageProfile</arg>
+                                </function>
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+                                </function>
+                            </post-functions>
+                        </unconditional-result>
+                    </results>
+                </action>
+            </actions>
+        </step>
+    </steps>
+</workflow>`
+
+    // Test the parser 
+    var xml =
+      '<?xml version="1.0" encoding="utf-8"?>' +
+      '<note importance="high" logged="true">' +
+      '    <title>Happy</title>' +
+      '    <todo>Work</todo>' +
+      '    <todo>Play</todo>' +
+      '</note>';
+
+
+    parseWorkflowService.toJson(wfd);
 
     // Initialize the data
     var data = {
