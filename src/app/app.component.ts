@@ -17,7 +17,7 @@ export class AppComponent {
 
   constructor(private parseWorkflowService: ParseWorkflowService) {
 
-    var wfd =
+    let wfd =
       `<workflow>
     <initial-actions>
         <!-- Display the initial eForm to show LEP Channel data -->
@@ -89,7 +89,7 @@ export class AppComponent {
 </workflow>`
 
     // Test the parser 
-    var xml =
+    let xml =
       '<?xml version="1.0" encoding="utf-8"?>' +
       '<note importance="high" logged="true">' +
       '    <title>Happy</title>' +
@@ -98,10 +98,10 @@ export class AppComponent {
       '</note>';
 
 
-    parseWorkflowService.toJson(wfd);
+    parseWorkflowService.toJs(xml);
 
     // Initialize the data
-    var data = {
+    let data = {
       nodes: [{
         name: "A",
         x: 200,
@@ -131,15 +131,15 @@ export class AppComponent {
       },]
     };
 
-    var svg = d3.select("body")
+    let svg = d3.select("body")
       .append("svg")
       .attr("width", 1200)
       .attr("height", 800);
 
 
-    var color = d3.scaleOrdinal(d3.schemeCategory10);
+    let color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    var drag = d3.drag()
+    let drag = d3.drag()
       .on("drag", function (d: Node, i) {
         d.x += d3.event.dx
         d.y += d3.event.dy
@@ -153,20 +153,20 @@ export class AppComponent {
         });
       });
 
-    var links = svg.selectAll("link")
+    let links = svg.selectAll("link")
       .data(data.links)
       .enter()
       .append("line")
       .attr("class", "link")
       .attr("x1", function (l) {
-        var sourceNode = data.nodes.filter(function (d, i) {
+        let sourceNode = data.nodes.filter(function (d, i) {
           return i == l.source
         })[0];
         d3.select(this).attr("y1", sourceNode.y);
         return sourceNode.x
       })
       .attr("x2", function (l) {
-        var targetNode = data.nodes.filter(function (d, i) {
+        let targetNode = data.nodes.filter(function (d, i) {
           return i == l.target
         })[0];
         d3.select(this).attr("y2", targetNode.y);
@@ -176,7 +176,7 @@ export class AppComponent {
       .attr("stroke", "white");
 
 
-    var nodes = svg.selectAll("node")
+    let nodes = svg.selectAll("node")
       .data(data.nodes)
       .enter()
       .append("circle")
