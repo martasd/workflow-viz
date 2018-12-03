@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core';
-import { xml2json, xml2js, Element, ElementCompact } from 'xml-js';
+import { Element, ElementCompact, xml2js, xml2json } from 'xml-js';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ParseWorkflowService {
-
   json: string;
   js: Element | ElementCompact;
 
-  constructor() {
-  }
+  constructor() {}
 
   toJson(xml: string) {
     this.json = xml2json(xml, { compact: true, spaces: 4 });
@@ -21,6 +19,4 @@ export class ParseWorkflowService {
     this.js = xml2js(xml);
     console.log(this.js);
   }
-
-
 }

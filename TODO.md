@@ -8,10 +8,11 @@
 - Add xml-js
 - Convert WFD's XML to JSON with xml-js
 - Parse WFD into a JS object with an XML parser
+- Set up TsLint with Prettier
+- Apply TsLint and Prettier to the project
 
 # TODO
 
-- Set up TsLint with Prettier
-- How to use the external JS library?
+- How to use deepdash external JS library?
 - Create nodes from all JS object elements.
 - Read XML from a file.
