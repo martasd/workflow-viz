@@ -10,9 +10,9 @@
 - Parse WFD into a JS object with an XML parser
 - Set up TsLint with Prettier
 - Apply TsLint and Prettier to the project
+- Traverse nodes with traverse
 
 # TODO
 
-- How to use deepdash external JS library?
 - Create nodes from all JS object elements.
 - Read XML from a file.

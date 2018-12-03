@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import * as d3 from 'd3';
+import { Element, ElementCompact } from 'xml-js';
 import { Node } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
-// import * as deepdash from 'deepdash';
 
-// declare var _: any;
+declare var traverse: any;
 
 /* Draw the nodes and links in an SVG container
 
@@ -28,14 +28,11 @@ export class AppComponent {
       '    <todo>Play</todo>' +
       '</note>';
 
-    // _.eachDeep(
-    //   xml,
-    //   (value, key, path, depth, parent, parentKey, parentPath) => {
-    //     console.log(key + " " + value);
-    //   }
-    // );
+    const obj: Element | ElementCompact = parseWorkflowService.toJs(xml);
 
-    parseWorkflowService.toJs(xml);
+    traverse(obj).map(x => {
+      console.log(x + '\n');
+    });
 
     // Initialize the data
     const data = {

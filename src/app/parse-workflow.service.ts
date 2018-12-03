@@ -12,11 +12,11 @@ export class ParseWorkflowService {
 
   toJson(xml: string) {
     this.json = xml2json(xml, { compact: true, spaces: 4 });
-    console.log(this.json);
+    return this.json;
   }
 
   toJs(xml: string) {
     this.js = xml2js(xml);
-    console.log(this.js);
+    return this.js;
   }
 }
