@@ -18,6 +18,15 @@ declare var traverse: any;
 export class AppComponent {
   title = 'workflow-viz';
 
+  afuConfig = {
+    multiple: false,
+    formatsAllowed: '.xml',
+    maxSize: '1',
+    uploadAPI: {
+      url: 'https://example-file-upload-api'
+    }
+  };
+
   constructor(private parseWorkflowService: ParseWorkflowService) {
     // Test the parser
     const xml: string =
