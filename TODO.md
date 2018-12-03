@@ -11,8 +11,10 @@
 - Set up TsLint with Prettier
 - Apply TsLint and Prettier to the project
 - Traverse nodes with traverse
+- Add bootstrap
 
 # TODO
 
-- Create nodes from all JS object elements.
+- Make it publicly accessible
 - Read XML from a file.
+- Create nodes from all JS object elements.
