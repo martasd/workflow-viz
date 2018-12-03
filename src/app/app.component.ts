@@ -86,8 +86,8 @@ export class AppComponent {
     const svg = d3
       .select('body')
       .append('svg')
-      .attr('width', 1200)
-      .attr('height', 800);
+      .attr('width', 800)
+      .attr('height', 600);
 
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
