@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import * as d3 from 'd3';
 import { Element, ElementCompact } from 'xml-js';
-import { Node } from './d3/models';
+import { Link, Node } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
 
 declare var traverse: any;
@@ -16,7 +16,8 @@ declare var traverse: any;
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'workflow-viz';
+  title: string;
+  data: object;
 
   afuConfig = {
     multiple: false,
@@ -27,24 +28,11 @@ export class AppComponent {
     }
   };
 
-  constructor(private parseWorkflowService: ParseWorkflowService) {
-    // Test the parser
-    const xml: string =
-      '<?xml version="1.0" encoding="utf-8"?>' +
-      '<note importance="high" logged="true">' +
-      '    <title>Happy</title>' +
-      '    <todo>Work</todo>' +
-      '    <todo>Play</todo>' +
-      '</note>';
-
-    const obj: Element | ElementCompact = parseWorkflowService.toJs(xml);
-
-    traverse(obj).map(x => {
-      console.log(x + '\n');
-    });
+  initTestData(): void {
+    this.title = 'workflow-viz';
 
     // Initialize the data
-    const data = {
+    this.data = {
       nodes: [
         {
           name: 'A',
@@ -82,7 +70,9 @@ export class AppComponent {
         }
       ]
     };
+  }
 
+  createSvg(data): void {
     const svg = d3
       .select('body')
       .append('svg')
@@ -97,7 +87,7 @@ export class AppComponent {
       d3.select(this)
         .attr('cx', d.x)
         .attr('cy', d.y);
-      links.each(function(l, li) {
+      links.each(function(l: Link, li) {
         if (l.source === i) {
           d3.select(this)
             .attr('x1', d.x)
@@ -116,14 +106,14 @@ export class AppComponent {
       .enter()
       .append('line')
       .attr('class', 'link')
-      .attr('x1', function(l) {
+      .attr('x1', function(l: Link) {
         const sourceNode = data.nodes.filter((d, i) => {
           return i === l.source;
         })[0];
         d3.select(this).attr('y1', sourceNode.y);
         return sourceNode.x;
       })
-      .attr('x2', function(l) {
+      .attr('x2', function(l: Link) {
         const targetNode = data.nodes.filter((d, i) => {
           return i === l.target;
         })[0];
@@ -139,10 +129,10 @@ export class AppComponent {
       .enter()
       .append('circle')
       .attr('class', 'node')
-      .attr('cx', d => {
+      .attr('cx', (d: Node) => {
         return d.x;
       })
-      .attr('cy', d => {
+      .attr('cy', (d: Node) => {
         return d.y;
       })
       .attr('r', 15)
@@ -150,5 +140,25 @@ export class AppComponent {
         return color(i.toString());
       })
       .call(drag);
+  }
+  constructor(private parseWorkflowService: ParseWorkflowService) {
+    // Test the parser
+    const xml: string =
+      '<?xml version="1.0" encoding="utf-8"?>' +
+      '<note importance="high" logged="true">' +
+      '    <title>Happy</title>' +
+      '    <todo>Work</todo>' +
+      '    <todo>Play</todo>' +
+      '</note>';
+
+    const obj: Element | ElementCompact = parseWorkflowService.toJs(xml);
+
+    traverse(obj).map(x => {
+      console.log(x + '\n');
+    });
+
+    this.initTestData();
+
+    this.createSvg(this.data);
   }
 }
