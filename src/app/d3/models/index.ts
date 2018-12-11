@@ -1,3 +1,2 @@
-export * from './link';
-export * from './node';
-
+export * from './svg-link';
+export * from './svg-node';

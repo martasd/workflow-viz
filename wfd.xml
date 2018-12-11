@@ -1,0 +1,48 @@
+<workflow>
+  <initial-actions>
+    <action id="2" name="Retrieve Mandate" view="RetrieveMandate">
+      <results>
+        <unconditional-result old-status="Finished" status="NewMessageCreated" step="1">
+        </unconditional-result>
+      </results>
+    </action>
+  </initial-actions>
+  <steps>
+    <step id="1" name="DisplayMandate">
+      <actions>
+        <action id="101" name="Generate Request">
+          <results>
+            <unconditional-result old-status="Finished" status="RequestGenerated" step="2">
+            </unconditional-result>
+          </results>
+        </action>
+        <action id="102" name="Cancel">
+          <results>
+            <unconditional-result old-status="Finished" status="Cancel" step="3">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    <step id="2" name="DisplayMandate">
+      <actions>
+        <action id="201" name="Generate Request">
+          <results>
+            <unconditional-result old-status="Finished" status="RequestGenerated" step="3">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    <step id="3" name="DisplayMandate">
+      <actions>
+        <action id="101" name="Generate Request">
+          <results>
+            <unconditional-result old-status="Finished" status="RequestGenerated" step="-1">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+  </steps>
+</workflow>

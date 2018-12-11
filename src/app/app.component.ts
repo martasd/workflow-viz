@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import * as d3 from 'd3';
 import { Element, ElementCompact } from 'xml-js';
-import { Link, Node } from './d3/models';
+import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
 
 declare var traverse: any;
@@ -17,7 +17,11 @@ declare var traverse: any;
 })
 export class AppComponent {
   title: string;
-  data: object;
+  testData: object;
+  nodes: SvgNode[] = [];
+  links: SvgLink[] = [];
+  shortXml: string;
+  longXml: string;
 
   afuConfig = {
     multiple: false,
@@ -32,7 +36,7 @@ export class AppComponent {
     this.title = 'workflow-viz';
 
     // Initialize the data
-    this.data = {
+    this.testData = {
       nodes: [
         {
           name: 'A',
@@ -70,9 +74,147 @@ export class AppComponent {
         }
       ]
     };
+
+    this.shortXml =
+      '<?xml version="1.0" encoding="utf-8"?>' +
+      '<note importance="high" logged="true">' +
+      '    <title>Happy</title>' +
+      '    <todo>Work</todo>' +
+      '    <todo>Play</todo>' +
+      '</note>';
+
+    this.longXml = `<?xml version="1.0" encoding="utf-8"?>
+    <workflow>
+  <initial-actions>
+    <action id="2" name="Retrieve Mandate" view="RetrieveMandate">
+      <results>
+        <unconditional-result old-status="Finished" status="NewMessageCreated" step="1">
+        </unconditional-result>
+      </results>
+    </action>
+  </initial-actions>
+  <steps>
+    <step id="1" name="DisplayMandate">
+      <actions>
+        <action id="101" name="Generate Request">
+          <results>
+            <unconditional-result old-status="Finished" status="RequestGenerated" step="2">
+            </unconditional-result>
+          </results>
+        </action>
+        <action id="102" name="Cancel">
+          <results>
+            <unconditional-result old-status="Finished" status="Cancel" step="3">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    <step id="2" name="DisplayMandate">
+      <actions>
+        <action id="201" name="Generate Request">
+          <results>
+            <unconditional-result old-status="Finished" status="RequestGenerated" step="3">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    <step id="3" name="DisplayMandate">
+      <actions>
+        <action id="101" name="Generate Request">
+          <results>
+            <unconditional-result old-status="Finished" status="RequestGenerated" step="-1">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+  </steps>
+</workflow>`;
   }
 
-  createSvg(data): void {
+  createSvg(nodes, links): void {}
+
+  // Create nodes and links from XML JS object
+  createGraph(obj: Element | ElementCompact) {
+    type linkTuple = [number, number];
+
+    let x: number = 20;
+    let y: number = 20;
+    const increment: number = 30;
+    let svgNode: SvgNode;
+    let svgLink: SvgLink;
+    let currentNodeId: number;
+    let currentLinkEnds: linkTuple = null;
+    let linkEndsTuples: linkTuple[] = [];
+
+    traverse(obj).map(elem => {
+      // Create nodes for steps, actions and result xml elements
+      switch (elem.name) {
+        case 'initial-actions': {
+          // Initial node will have id 0
+          currentNodeId = 0;
+          svgNode = new SvgNode('initial', currentNodeId, x, y);
+          this.nodes.push(svgNode);
+          x += increment;
+          y += increment;
+          break;
+        }
+        case 'step': {
+          currentNodeId = parseInt(elem.attributes.id, 10);
+          svgNode = new SvgNode(elem.attributes.name, currentNodeId, x, y);
+          this.nodes.push(svgNode);
+          x += increment;
+          y += increment;
+          break;
+        }
+        case 'unconditional-result': {
+          // Record a link (note: target node does not exist yet)
+          currentLinkEnds = [currentNodeId, parseInt(elem.attributes.step, 10)];
+          linkEndsTuples.push(currentLinkEnds);
+          break;
+        }
+        default: {
+          // Otherwise no need to instantiate any element
+        }
+      }
+    });
+
+    // Create node for final step
+    svgNode = new SvgNode('final', -1, x, y);
+    this.nodes.push(svgNode);
+
+    // Create the links
+    let source: number;
+    let target: number;
+    linkEndsTuples.forEach(linkEnds => {
+      source = this.nodes.findIndex(node => {
+        return node.id === linkEnds[0];
+      });
+
+      target = this.nodes.findIndex(node => {
+        return node.id === linkEnds[1];
+      });
+
+      svgLink = new SvgLink(source, target);
+      this.links.push(svgLink);
+    });
+  }
+
+  constructor(private parseWorkflowService: ParseWorkflowService) {
+    let obj: Element | ElementCompact;
+    let nodes = this.nodes;
+    let links = this.links;
+
+    this.initTestData();
+
+    obj = parseWorkflowService.toJs(this.longXml);
+
+    this.createGraph(obj);
+
+    this.createSvg(this.nodes, this.links);
+
     const svg = d3
       .select('body')
       .append('svg')
@@ -81,13 +223,13 @@ export class AppComponent {
 
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    const drag = d3.drag().on('drag', function(d: Node, i) {
+    const drag = d3.drag().on('drag', function(d: SvgNode, i) {
       d.x += d3.event.dx;
       d.y += d3.event.dy;
       d3.select(this)
         .attr('cx', d.x)
         .attr('cy', d.y);
-      links.each(function(l: Link, li) {
+      links.forEach(function(l: SvgLink, li) {
         if (l.source === i) {
           d3.select(this)
             .attr('x1', d.x)
@@ -100,21 +242,21 @@ export class AppComponent {
       });
     });
 
-    const links = svg
+    const svgLinks = svg
       .selectAll('link')
-      .data(data.links)
+      .data(links)
       .enter()
       .append('line')
       .attr('class', 'link')
-      .attr('x1', function(l: Link) {
-        const sourceNode = data.nodes.filter((d, i) => {
+      .attr('x1', function(l: SvgLink) {
+        const sourceNode = nodes.filter((d, i) => {
           return i === l.source;
         })[0];
         d3.select(this).attr('y1', sourceNode.y);
         return sourceNode.x;
       })
-      .attr('x2', function(l: Link) {
-        const targetNode = data.nodes.filter((d, i) => {
+      .attr('x2', function(l: SvgLink) {
+        const targetNode = nodes.filter((d, i) => {
           return i === l.target;
         })[0];
         d3.select(this).attr('y2', targetNode.y);
@@ -123,16 +265,17 @@ export class AppComponent {
       .attr('fill', 'none')
       .attr('stroke', 'white');
 
-    const nodes = svg
+    // TODO: Show node name
+    const svgNodes = svg
       .selectAll('node')
-      .data(data.nodes)
+      .data(nodes)
       .enter()
       .append('circle')
       .attr('class', 'node')
-      .attr('cx', (d: Node) => {
+      .attr('cx', (d: SvgNode) => {
         return d.x;
       })
-      .attr('cy', (d: Node) => {
+      .attr('cy', (d: SvgNode) => {
         return d.y;
       })
       .attr('r', 15)
@@ -140,25 +283,5 @@ export class AppComponent {
         return color(i.toString());
       })
       .call(drag);
-  }
-  constructor(private parseWorkflowService: ParseWorkflowService) {
-    // Test the parser
-    const xml: string =
-      '<?xml version="1.0" encoding="utf-8"?>' +
-      '<note importance="high" logged="true">' +
-      '    <title>Happy</title>' +
-      '    <todo>Work</todo>' +
-      '    <todo>Play</todo>' +
-      '</note>';
-
-    const obj: Element | ElementCompact = parseWorkflowService.toJs(xml);
-
-    traverse(obj).map(x => {
-      console.log(x + '\n');
-    });
-
-    this.initTestData();
-
-    this.createSvg(this.data);
   }
 }

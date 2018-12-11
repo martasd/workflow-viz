@@ -12,9 +12,10 @@
 - Apply TsLint and Prettier to the project
 - Traverse nodes with traverse
 - Add bootstrap
+- Deploy it to a public URL
+- Create a simple XML example structure
+- Create nodes from all JS object elements.
 
 # TODO
 
-- Make it publicly accessible
-- Read XML from a file.
-- Create nodes from all JS object elements.
+- Load XML from a file.
