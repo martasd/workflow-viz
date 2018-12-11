@@ -15,6 +15,7 @@
 - Deploy it to a public URL
 - Create a simple XML example structure
 - Create nodes from all JS object elements.
+- Add text inside the circles.
 
 # TODO
 

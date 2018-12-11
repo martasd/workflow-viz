@@ -134,7 +134,12 @@ export class AppComponent {
 </workflow>`;
   }
 
-  createSvg(nodes, links): void {
+  createSvg(
+    nodes: SvgNode[],
+    links: SvgLink[],
+    radius: number,
+    fontSize: number
+  ): void {
     const svg = d3
       .select('body')
       .append('svg')
@@ -162,7 +167,7 @@ export class AppComponent {
       });
     });
 
-    const svgLinks = svg
+    const svgLines = svg
       .selectAll('link')
       .data(links)
       .enter()
@@ -185,8 +190,7 @@ export class AppComponent {
       .attr('fill', 'none')
       .attr('stroke', 'white');
 
-    // TODO: Show node name
-    const svgNodes = svg
+    const svgCircles = svg
       .selectAll('node')
       .data(nodes)
       .enter()
@@ -198,25 +202,42 @@ export class AppComponent {
       .attr('cy', (d: SvgNode) => {
         return d.y;
       })
-      .attr('r', 15)
+      .attr('r', radius)
       .attr('fill', (d, i) => {
         return color(i.toString());
       })
       .call(drag);
+
+    const svgTextLabels = svg
+      .selectAll('text')
+      .data(nodes)
+      .enter()
+      .append('text')
+      .attr('x', (d: SvgNode) => {
+        return d.x;
+      })
+      .attr('y', (d: SvgNode) => {
+        return d.y;
+      })
+      .attr('font-size', fontSize.toString())
+      .attr('text-anchor', 'middle')
+      .attr('alignment-baseline', 'middle')
+      .text(d => {
+        return d.name;
+      });
   }
 
   // Create nodes and links from XML JS object
-  createGraph(obj: Element | ElementCompact) {
+  createGraph(obj: Element | ElementCompact, circleDistance: number) {
     type linkTuple = [number, number];
 
-    let x: number = 20;
-    let y: number = 20;
-    const increment: number = 30;
+    let x: number = circleDistance;
+    let y: number = circleDistance;
     let svgNode: SvgNode;
     let svgLink: SvgLink;
     let currentNodeId: number;
     let currentLinkEnds: linkTuple = null;
-    let linkEndsTuples: linkTuple[] = [];
+    const linkEndsTuples: linkTuple[] = [];
 
     traverse(obj).map(elem => {
       // Create nodes for steps, actions and result xml elements
@@ -224,18 +245,18 @@ export class AppComponent {
         case 'initial-actions': {
           // Initial node will have id 0
           currentNodeId = 0;
-          svgNode = new SvgNode('initial', currentNodeId, x, y);
+          svgNode = new SvgNode('Initial', currentNodeId, x, y);
           this.nodes.push(svgNode);
-          x += increment;
-          y += increment;
+          x += circleDistance;
+          y += circleDistance;
           break;
         }
         case 'step': {
           currentNodeId = parseInt(elem.attributes.id, 10);
           svgNode = new SvgNode(elem.attributes.name, currentNodeId, x, y);
           this.nodes.push(svgNode);
-          x += increment;
-          y += increment;
+          x += circleDistance;
+          y += circleDistance;
           break;
         }
         case 'unconditional-result': {
@@ -251,7 +272,7 @@ export class AppComponent {
     });
 
     // Create node for final step
-    svgNode = new SvgNode('final', -1, x, y);
+    svgNode = new SvgNode('Final', -1, x, y);
     this.nodes.push(svgNode);
 
     // Create the links
@@ -274,12 +295,16 @@ export class AppComponent {
   constructor(private parseWorkflowService: ParseWorkflowService) {
     let obj: Element | ElementCompact;
 
+    const radius: number = 50;
+    const fontSize: number = radius / 3;
+    const circleDistance: number = radius * 2;
+
     this.initTestData();
 
     obj = parseWorkflowService.toJs(this.longXml);
 
-    this.createGraph(obj);
+    this.createGraph(obj, circleDistance);
 
-    this.createSvg(this.nodes, this.links);
+    this.createSvg(this.nodes, this.links, radius, fontSize);
   }
 }
