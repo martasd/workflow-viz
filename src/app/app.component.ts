@@ -134,7 +134,76 @@ export class AppComponent {
 </workflow>`;
   }
 
-  createSvg(nodes, links): void {}
+  createSvg(nodes, links): void {
+    const svg = d3
+      .select('body')
+      .append('svg')
+      .attr('width', 800)
+      .attr('height', 600);
+
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    const drag = d3.drag().on('drag', function(d: SvgNode, i) {
+      d.x += d3.event.dx;
+      d.y += d3.event.dy;
+      d3.select(this)
+        .attr('cx', d.x)
+        .attr('cy', d.y);
+      links.forEach(function(l: SvgLink, li) {
+        if (l.source === i) {
+          d3.select(this)
+            .attr('x1', d.x)
+            .attr('y1', d.y);
+        } else if (l.target === i) {
+          d3.select(this)
+            .attr('x2', d.x)
+            .attr('y2', d.y);
+        }
+      });
+    });
+
+    const svgLinks = svg
+      .selectAll('link')
+      .data(links)
+      .enter()
+      .append('line')
+      .attr('class', 'link')
+      .attr('x1', function(l: SvgLink) {
+        const sourceNode = nodes.filter((d, i) => {
+          return i === l.source;
+        })[0];
+        d3.select(this).attr('y1', sourceNode.y);
+        return sourceNode.x;
+      })
+      .attr('x2', function(l: SvgLink) {
+        const targetNode = nodes.filter((d, i) => {
+          return i === l.target;
+        })[0];
+        d3.select(this).attr('y2', targetNode.y);
+        return targetNode.x;
+      })
+      .attr('fill', 'none')
+      .attr('stroke', 'white');
+
+    // TODO: Show node name
+    const svgNodes = svg
+      .selectAll('node')
+      .data(nodes)
+      .enter()
+      .append('circle')
+      .attr('class', 'node')
+      .attr('cx', (d: SvgNode) => {
+        return d.x;
+      })
+      .attr('cy', (d: SvgNode) => {
+        return d.y;
+      })
+      .attr('r', 15)
+      .attr('fill', (d, i) => {
+        return color(i.toString());
+      })
+      .call(drag);
+  }
 
   // Create nodes and links from XML JS object
   createGraph(obj: Element | ElementCompact) {
@@ -204,8 +273,6 @@ export class AppComponent {
 
   constructor(private parseWorkflowService: ParseWorkflowService) {
     let obj: Element | ElementCompact;
-    let nodes = this.nodes;
-    let links = this.links;
 
     this.initTestData();
 
@@ -214,74 +281,5 @@ export class AppComponent {
     this.createGraph(obj);
 
     this.createSvg(this.nodes, this.links);
-
-    const svg = d3
-      .select('body')
-      .append('svg')
-      .attr('width', 800)
-      .attr('height', 600);
-
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-    const drag = d3.drag().on('drag', function(d: SvgNode, i) {
-      d.x += d3.event.dx;
-      d.y += d3.event.dy;
-      d3.select(this)
-        .attr('cx', d.x)
-        .attr('cy', d.y);
-      links.forEach(function(l: SvgLink, li) {
-        if (l.source === i) {
-          d3.select(this)
-            .attr('x1', d.x)
-            .attr('y1', d.y);
-        } else if (l.target === i) {
-          d3.select(this)
-            .attr('x2', d.x)
-            .attr('y2', d.y);
-        }
-      });
-    });
-
-    const svgLinks = svg
-      .selectAll('link')
-      .data(links)
-      .enter()
-      .append('line')
-      .attr('class', 'link')
-      .attr('x1', function(l: SvgLink) {
-        const sourceNode = nodes.filter((d, i) => {
-          return i === l.source;
-        })[0];
-        d3.select(this).attr('y1', sourceNode.y);
-        return sourceNode.x;
-      })
-      .attr('x2', function(l: SvgLink) {
-        const targetNode = nodes.filter((d, i) => {
-          return i === l.target;
-        })[0];
-        d3.select(this).attr('y2', targetNode.y);
-        return targetNode.x;
-      })
-      .attr('fill', 'none')
-      .attr('stroke', 'white');
-
-    // TODO: Show node name
-    const svgNodes = svg
-      .selectAll('node')
-      .data(nodes)
-      .enter()
-      .append('circle')
-      .attr('class', 'node')
-      .attr('cx', (d: SvgNode) => {
-        return d.x;
-      })
-      .attr('cy', (d: SvgNode) => {
-        return d.y;
-      })
-      .attr('r', 15)
-      .attr('fill', (d, i) => {
-        return color(i.toString());
-      })
-      .call(drag);
   }
 }
