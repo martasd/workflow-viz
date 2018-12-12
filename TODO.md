@@ -16,6 +16,7 @@
 - Create a simple XML example structure
 - Create nodes from all JS object elements.
 - Add text inside the circles.
+- Show action names
 
 # TODO
 

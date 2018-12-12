@@ -35,46 +35,6 @@ export class AppComponent {
   initTestData(): void {
     this.title = 'workflow-viz';
 
-    // Initialize the data
-    this.testData = {
-      nodes: [
-        {
-          name: 'A',
-          x: 200,
-          y: 150
-        },
-        {
-          name: 'B',
-          x: 140,
-          y: 300
-        },
-        {
-          name: 'C',
-          x: 300,
-          y: 300
-        },
-        {
-          name: 'D',
-          x: 300,
-          y: 180
-        }
-      ],
-      links: [
-        {
-          source: 0,
-          target: 1
-        },
-        {
-          source: 1,
-          target: 2
-        },
-        {
-          source: 2,
-          target: 3
-        }
-      ]
-    };
-
     this.shortXml =
       '<?xml version="1.0" encoding="utf-8"?>' +
       '<note importance="high" logged="true">' +
@@ -86,7 +46,7 @@ export class AppComponent {
     this.longXml = `<?xml version="1.0" encoding="utf-8"?>
     <workflow>
   <initial-actions>
-    <action id="2" name="Retrieve Mandate" view="RetrieveMandate">
+    <action id="2" name="go to step 1" view="RetrieveMandate">
       <results>
         <unconditional-result old-status="Finished" status="NewMessageCreated" step="1">
         </unconditional-result>
@@ -94,15 +54,15 @@ export class AppComponent {
     </action>
   </initial-actions>
   <steps>
-    <step id="1" name="DisplayMandate">
+    <step id="1" name="Step 1">
       <actions>
-        <action id="101" name="Generate Request">
+        <action id="101" name="go to step 2">
           <results>
             <unconditional-result old-status="Finished" status="RequestGenerated" step="2">
             </unconditional-result>
           </results>
         </action>
-        <action id="102" name="Cancel">
+        <action id="102" name="go to step 3">
           <results>
             <unconditional-result old-status="Finished" status="Cancel" step="3">
             </unconditional-result>
@@ -110,9 +70,9 @@ export class AppComponent {
         </action>
       </actions>
     </step>
-    <step id="2" name="DisplayMandate">
+    <step id="2" name="Step 2">
       <actions>
-        <action id="201" name="Generate Request">
+        <action id="201" name="go to step 3">
           <results>
             <unconditional-result old-status="Finished" status="RequestGenerated" step="3">
             </unconditional-result>
@@ -120,9 +80,9 @@ export class AppComponent {
         </action>
       </actions>
     </step>
-    <step id="3" name="DisplayMandate">
+    <step id="3" name="Step 3">
       <actions>
-        <action id="101" name="Generate Request">
+        <action id="101" name="go to final step">
           <results>
             <unconditional-result old-status="Finished" status="RequestGenerated" step="-1">
             </unconditional-result>
@@ -143,12 +103,12 @@ export class AppComponent {
     const svg = d3
       .select('body')
       .append('svg')
-      .attr('width', 800)
-      .attr('height', 600);
+      .attr('width', 1000)
+      .attr('height', 900);
 
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    const drag = d3.drag().on('drag', function(d: SvgNode, i) {
+    const drag = d3.drag().on('drag', function(d: SvgNode, i, group) {
       d.x += d3.event.dx;
       d.y += d3.event.dy;
       d3.select(this)
@@ -167,10 +127,11 @@ export class AppComponent {
       });
     });
 
-    const svgLines = svg
-      .selectAll('link')
-      .data(links)
-      .enter()
+    const lineData = svg.selectAll('link').data(links);
+
+    const lineGroup = lineData.enter().append('g');
+
+    const svgLines = lineGroup
       .append('line')
       .attr('class', 'link')
       .attr('x1', function(l: SvgLink) {
@@ -190,10 +151,42 @@ export class AppComponent {
       .attr('fill', 'none')
       .attr('stroke', 'white');
 
-    const svgCircles = svg
-      .selectAll('node')
-      .data(nodes)
+    const svgLineLabels = lineGroup
+      .append('text')
+      .attr('class', 'link')
+      .attr('x', (l: SvgLink) => {
+        const sourceNode = nodes.filter((d, i) => {
+          return i === l.source;
+        })[0];
+        const targetNode = nodes.filter((d, i) => {
+          return i === l.target;
+        })[0];
+        return sourceNode.x + (targetNode.x - sourceNode.x) / 2;
+      })
+      .attr('y', (l: SvgLink) => {
+        const sourceNode = nodes.filter((d, i) => {
+          return i === l.source;
+        })[0];
+        const targetNode = nodes.filter((d, i) => {
+          return i === l.target;
+        })[0];
+        return sourceNode.y + (targetNode.y - sourceNode.y) / 2;
+      })
+      .attr('font-size', fontSize.toString())
+      .attr('fill', 'white')
+      .attr('text-anchor', 'middle')
+      .text((l: SvgLink) => {
+        return l.name;
+      });
+
+    const circleData = svg.selectAll('node').data(nodes);
+
+    const circleGroup = circleData
       .enter()
+      .append('g')
+      .call(drag);
+
+    const svgCircles = circleGroup
       .append('circle')
       .attr('class', 'node')
       .attr('cx', (d: SvgNode) => {
@@ -205,13 +198,9 @@ export class AppComponent {
       .attr('r', radius)
       .attr('fill', (d, i) => {
         return color(i.toString());
-      })
-      .call(drag);
+      });
 
-    const svgTextLabels = svg
-      .selectAll('text')
-      .data(nodes)
-      .enter()
+    const svgCircleLabels = circleGroup
       .append('text')
       .attr('x', (d: SvgNode) => {
         return d.x;
@@ -222,21 +211,25 @@ export class AppComponent {
       .attr('font-size', fontSize.toString())
       .attr('text-anchor', 'middle')
       .attr('alignment-baseline', 'middle')
-      .text(d => {
+      .text((d: SvgNode) => {
         return d.name;
       });
   }
 
   // Create nodes and links from XML JS object
   createGraph(obj: Element | ElementCompact, circleDistance: number) {
-    type linkTuple = [number, number];
+    type linkTuple = [string, number, number];
 
     let x: number = circleDistance;
     let y: number = circleDistance;
     let svgNode: SvgNode;
     let svgLink: SvgLink;
     let currentNodeId: number;
+    let targetNodeId: number;
+    let actionName: string;
     let currentLinkEnds: linkTuple = null;
+    let nodeFound: SvgNode;
+    let stepShifted: boolean = false;
     const linkEndsTuples: linkTuple[] = [];
 
     traverse(obj).map(elem => {
@@ -247,21 +240,49 @@ export class AppComponent {
           currentNodeId = 0;
           svgNode = new SvgNode('Initial', currentNodeId, x, y);
           this.nodes.push(svgNode);
-          x += circleDistance;
-          y += circleDistance;
           break;
         }
         case 'step': {
           currentNodeId = parseInt(elem.attributes.id, 10);
-          svgNode = new SvgNode(elem.attributes.name, currentNodeId, x, y);
-          this.nodes.push(svgNode);
-          x += circleDistance;
-          y += circleDistance;
+
+          nodeFound = this.nodes.find(node => {
+            return node.id === currentNodeId;
+          });
+          nodeFound.name = elem.attributes.name;
+          stepShifted = false;
+
+          break;
+        }
+        case 'action': {
+          actionName = elem.attributes.name;
           break;
         }
         case 'unconditional-result': {
-          // Record a link (note: target node does not exist yet)
-          currentLinkEnds = [currentNodeId, parseInt(elem.attributes.step, 10)];
+          targetNodeId = parseInt(elem.attributes.step, 10);
+
+          // Create a new node if it does not exist yet
+          nodeFound = this.nodes.find(node => {
+            return node.id === targetNodeId;
+          });
+
+          // Shift x coordinate if it has not been shifted for the current step yet
+          if (!nodeFound) {
+            if (!stepShifted) {
+              x += circleDistance;
+              stepShifted = true;
+            }
+            y += circleDistance;
+
+            svgNode =
+              targetNodeId === -1
+                ? new SvgNode('Final', targetNodeId, x, y)
+                : new SvgNode('', targetNodeId, x, y);
+
+            this.nodes.push(svgNode);
+          }
+
+          // Record a link
+          currentLinkEnds = [actionName, currentNodeId, targetNodeId];
           linkEndsTuples.push(currentLinkEnds);
           break;
         }
@@ -271,23 +292,22 @@ export class AppComponent {
       }
     });
 
-    // Create node for final step
-    svgNode = new SvgNode('Final', -1, x, y);
-    this.nodes.push(svgNode);
-
     // Create the links
+    let name: string;
     let source: number;
     let target: number;
     linkEndsTuples.forEach(linkEnds => {
-      source = this.nodes.findIndex(node => {
-        return node.id === linkEnds[0];
-      });
+      name = linkEnds[0];
 
-      target = this.nodes.findIndex(node => {
+      source = this.nodes.findIndex(node => {
         return node.id === linkEnds[1];
       });
 
-      svgLink = new SvgLink(source, target);
+      target = this.nodes.findIndex(node => {
+        return node.id === linkEnds[2];
+      });
+
+      svgLink = new SvgLink(name, source, target);
       this.links.push(svgLink);
     });
   }
@@ -295,9 +315,10 @@ export class AppComponent {
   constructor(private parseWorkflowService: ParseWorkflowService) {
     let obj: Element | ElementCompact;
 
-    const radius: number = 50;
+    // Init lengths and sizes
+    const radius: number = 40;
     const fontSize: number = radius / 3;
-    const circleDistance: number = radius * 2;
+    const circleDistance: number = radius * 4;
 
     this.initTestData();
 
