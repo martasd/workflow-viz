@@ -17,6 +17,8 @@
 - Create nodes from all JS object elements.
 - Add text inside the circles.
 - Show action names
+- Make size dependent on coordinates of the last node
+- Test on more sophisticated workflows
 
 # TODO
 
