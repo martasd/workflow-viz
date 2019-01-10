@@ -19,7 +19,8 @@
 - Show action names
 - Make size dependent on coordinates of the last node
 - Test on more sophisticated workflows
+- Use arrows instead of lines
 
 # TODO
 
-- Load XML from a file.
+- Load XML from an external file.
