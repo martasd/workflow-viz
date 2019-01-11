@@ -24,5 +24,4 @@
 
 # TODO
 
-- Display step properties
 - Load XML from an external file.
