@@ -20,7 +20,9 @@
 - Make size dependent on coordinates of the last node
 - Test on more sophisticated workflows
 - Use arrows instead of lines
+- Cyclic references
 
 # TODO
 
+- Display step properties
 - Load XML from an external file.

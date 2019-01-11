@@ -41,7 +41,7 @@ export class AppComponent {
   <initial-actions>
     <action id="2" name="go to step 1" view="RetrieveMandate">
       <results>
-        <unconditional-result old-status="Finished" status="NewMessageCreated" step="1">
+        <unconditional-result status="NewMessageCreated" step="1">
         </unconditional-result>
       </results>
     </action>
@@ -51,13 +51,13 @@ export class AppComponent {
       <actions>
         <action id="101" name="go to step 2">
           <results>
-            <unconditional-result old-status="Finished" status="RequestGenerated" step="2">
+            <unconditional-result status="RequestGenerated" step="2">
             </unconditional-result>
           </results>
         </action>
         <action id="102" name="go to step 3">
           <results>
-            <unconditional-result old-status="Finished" status="Cancel" step="3">
+            <unconditional-result status="Cancel" step="3">
             </unconditional-result>
           </results>
         </action>
@@ -67,7 +67,7 @@ export class AppComponent {
       <actions>
         <action id="201" name="go to step 3">
           <results>
-            <unconditional-result old-status="Finished" status="RequestGenerated" step="3">
+            <unconditional-result status="RequestGenerated" step="3">
             </unconditional-result>
           </results>
         </action>
@@ -75,15 +75,31 @@ export class AppComponent {
     </step>
     <step id="3" name="Step 3">
       <actions>
-        <action id="101" name="go to final step">
+        <action id="301" name="go to step 4">
           <results>
-            <unconditional-result old-status="Finished" status="RequestGenerated" step="-1">
+            <unconditional-result status="RequestGenerated" step="4">
             </unconditional-result>
           </results>
         </action>
       </actions>
     </step>
-  </steps>
+  <step id="4" name="Step 4">
+      <actions>
+        <action id="401" name="go to final step">
+          <results>
+            <unconditional-result status="RequestGenerated" step="-1">
+            </unconditional-result>
+          </results>
+        </action>
+        <action id="402" name="go to step 2">
+          <results>
+            <unconditional-result status="Back to 2" step="2">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    </steps>
 </workflow>`;
   }
 
@@ -375,7 +391,7 @@ export class AppComponent {
     const radius: number = 30; // The only parameter specified by the user
     const margin: number = radius;
     const fontSize: number = radius / 3;
-    const circleDistance: number = radius * 6;
+    const circleDistance: number = radius * 5;
 
     this.initTestData();
 
