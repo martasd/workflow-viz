@@ -112,6 +112,7 @@ export class AppComponent {
 
     const lineGroup = lineData.enter().append('g');
 
+    // Create lines
     const svgLines = lineGroup
       .append('line')
       .attr('class', 'link')
@@ -133,6 +134,7 @@ export class AppComponent {
       .attr('stroke', 'white')
       .attr('marker-end', 'url(#arrow)');
 
+    // Create line labels
     const svgLineLabels = lineGroup
       .append('text')
       .attr('class', 'link')
@@ -176,7 +178,6 @@ export class AppComponent {
       .attr('width', canvasSize.finalX.toString())
       .attr('height', canvasSize.finalY.toString());
 
-    // TODO: Make element groups draggable
     const drag = d3.drag().on('drag', function(d: SvgNode, i, group) {
       d.x += d3.event.dx;
       d.y += d3.event.dy;
@@ -322,7 +323,7 @@ export class AppComponent {
   }
 
   constructor(private parseWorkflowService: ParseWorkflowService) {
-    let obj: Element | ElementCompact;
+    let jsWorkflow: Element | ElementCompact;
     let canvasSize: { finalX: number; finalY: number };
 
     // Initialize lengths and sizes
@@ -333,9 +334,9 @@ export class AppComponent {
 
     this.initTestData();
 
-    obj = parseWorkflowService.toJs(this.xmlLong);
+    jsWorkflow = parseWorkflowService.toJs(this.xmlLong);
 
-    canvasSize = this.createGraph(obj, margin, circleDistance);
+    canvasSize = this.createGraph(jsWorkflow, margin, circleDistance);
 
     this.createSvg(this.nodes, this.links, canvasSize, radius, fontSize);
   }
