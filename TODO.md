@@ -22,10 +22,11 @@
 - Use arrows instead of lines
 - Cyclic references
 - Load xml WFDs from a separate file.
+- Disable global actions
 
 # TODO
 
-- Break long link names
 - Resolve multiple paths with same source and origin
+- Break long link names
 - How to best visually represent the workflow?
 - Load XML from an external file.

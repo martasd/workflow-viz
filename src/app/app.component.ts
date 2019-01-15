@@ -8,6 +8,10 @@ import { xmlLong, xmlSimple } from './workflows';
 type linkTuple = [string, number, number];
 declare var traverse: any;
 
+import deepdash from 'deepdash';
+import * as lodash from 'lodash';
+const _ = deepdash(lodash);
+
 /* Draw the nodes and links in an SVG container
 
    source: https://stackoverflow.com/questions/28102089/simple-graph-of-nodes-and-links-without-using-force-layout
@@ -322,6 +326,22 @@ export class AppComponent {
     return canvasSize;
   }
 
+  removeGlobalActions(jsWorkflow: Element | ElementCompact): void {
+    _.eachDeep(
+      jsWorkflow,
+      (value, key, path, depth, parent, parentKey, parentPath) => {
+        if (value === 'global-actions') {
+          console.log('key: ' + key);
+          console.log('value: ' + value);
+          console.log('path: ' + path);
+          console.log('parent: ' + parent);
+          delete parent['elements'];
+          console.log('is it here?');
+        }
+      }
+    );
+  }
+
   constructor(private parseWorkflowService: ParseWorkflowService) {
     let jsWorkflow: Element | ElementCompact;
     let canvasSize: { finalX: number; finalY: number };
@@ -335,6 +355,7 @@ export class AppComponent {
     this.initTestData();
 
     jsWorkflow = parseWorkflowService.toJs(this.xmlLong);
+    this.removeGlobalActions(jsWorkflow);
 
     canvasSize = this.createGraph(jsWorkflow, margin, circleDistance);
 
