@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { Element, ElementCompact } from 'xml-js';
 import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
+import { xmlLong, xmlSimple } from './workflows';
 
 type linkTuple = [string, number, number];
 declare var traverse: any;
@@ -21,8 +22,8 @@ export class AppComponent {
   testData: object;
   nodes: SvgNode[] = [];
   links: SvgLink[] = [];
-  xml0: string;
-  xml1: string;
+  xmlSimple: string;
+  xmlLong: string;
 
   afuConfig = {
     multiple: false,
@@ -36,71 +37,8 @@ export class AppComponent {
   initTestData(): void {
     this.title = 'workflow-viz';
 
-    this.xml0 = `<?xml version="1.0" encoding="utf-8"?>
-    <workflow>
-  <initial-actions>
-    <action id="2" name="go to step 1" view="RetrieveMandate">
-      <results>
-        <unconditional-result status="NewMessageCreated" step="1">
-        </unconditional-result>
-      </results>
-    </action>
-  </initial-actions>
-  <steps>
-    <step id="1" name="Step 1">
-      <actions>
-        <action id="101" name="go to step 2">
-          <results>
-            <unconditional-result status="RequestGenerated" step="2">
-            </unconditional-result>
-          </results>
-        </action>
-        <action id="102" name="go to step 3">
-          <results>
-            <unconditional-result status="Cancel" step="3">
-            </unconditional-result>
-          </results>
-        </action>
-      </actions>
-    </step>
-    <step id="2" name="Step 2">
-      <actions>
-        <action id="201" name="go to step 3">
-          <results>
-            <unconditional-result status="RequestGenerated" step="3">
-            </unconditional-result>
-          </results>
-        </action>
-      </actions>
-    </step>
-    <step id="3" name="Step 3">
-      <actions>
-        <action id="301" name="go to step 4">
-          <results>
-            <unconditional-result status="RequestGenerated" step="4">
-            </unconditional-result>
-          </results>
-        </action>
-      </actions>
-    </step>
-  <step id="4" name="Step 4">
-      <actions>
-        <action id="401" name="go to final step">
-          <results>
-            <unconditional-result status="RequestGenerated" step="-1">
-            </unconditional-result>
-          </results>
-        </action>
-        <action id="402" name="go to step 2">
-          <results>
-            <unconditional-result status="Back to 2" step="2">
-            </unconditional-result>
-          </results>
-        </action>
-      </actions>
-    </step>
-    </steps>
-</workflow>`;
+    this.xmlSimple = xmlSimple;
+    this.xmlLong = xmlLong;
   }
 
   createSvgCircles(
@@ -395,7 +333,7 @@ export class AppComponent {
 
     this.initTestData();
 
-    obj = parseWorkflowService.toJs(this.xml0);
+    obj = parseWorkflowService.toJs(this.xmlLong);
 
     canvasSize = this.createGraph(obj, margin, circleDistance);
 

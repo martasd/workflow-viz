@@ -1,5 +1,70 @@
-<!-- Pretty version of a workflow descriptor -->
-<?xml version="1.0" encoding="utf-8"?>
+const xmlSimple: string = `<?xml version="1.0" encoding="utf-8"?>
+    <workflow>
+  <initial-actions>
+    <action id="2" name="go to step 1" view="RetrieveMandate">
+      <results>
+        <unconditional-result status="NewMessageCreated" step="1">
+        </unconditional-result>
+      </results>
+    </action>
+  </initial-actions>
+  <steps>
+    <step id="1" name="Step 1">
+      <actions>
+        <action id="101" name="go to step 2">
+          <results>
+            <unconditional-result status="RequestGenerated" step="2">
+            </unconditional-result>
+          </results>
+        </action>
+        <action id="102" name="go to step 3">
+          <results>
+            <unconditional-result status="Cancel" step="3">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    <step id="2" name="Step 2">
+      <actions>
+        <action id="201" name="go to step 3">
+          <results>
+            <unconditional-result status="RequestGenerated" step="3">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    <step id="3" name="Step 3">
+      <actions>
+        <action id="301" name="go to step 4">
+          <results>
+            <unconditional-result status="RequestGenerated" step="4">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+  <step id="4" name="Step 4">
+      <actions>
+        <action id="401" name="go to final step">
+          <results>
+            <unconditional-result status="RequestGenerated" step="-1">
+            </unconditional-result>
+          </results>
+        </action>
+        <action id="402" name="go to step 2">
+          <results>
+            <unconditional-result status="Back to 2" step="2">
+            </unconditional-result>
+          </results>
+        </action>
+      </actions>
+    </step>
+    </steps>
+</workflow>`;
+
+const xmlLong: string = `<?xml version="1.0" encoding="utf-8"?>
 <workflow>
   <initial-actions>
     <action id="1" name="Create message">
@@ -1255,4 +1320,7 @@
       </actions>
     </step>
   </steps>
-</workflow>`
+</workflow>`;
+
+export { xmlSimple };
+export { xmlLong };
