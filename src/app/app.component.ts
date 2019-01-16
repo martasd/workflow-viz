@@ -5,7 +5,7 @@ import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
 import { xmlLong, xmlSimple } from './workflows';
 
-type linkTuple = [string, number, number];
+type linkTuple = [string[], number, number];
 declare var traverse: any;
 
 import deepdash from 'deepdash';
@@ -164,7 +164,23 @@ export class AppComponent {
       .attr('fill', 'white')
       .attr('text-anchor', 'middle')
       .text((l: SvgLink) => {
-        return l.name;
+        return l.names[0];
+      })
+      .append('tspan')
+      .attr('x', (l: SvgLink) => {
+        const sourceNode = nodes.filter((d, i) => {
+          return i === l.source;
+        })[0];
+        const targetNode = nodes.filter((d, i) => {
+          return i === l.target;
+        })[0];
+        return sourceNode.x + (targetNode.x - sourceNode.x) / 2;
+      })
+      .attr('dy', '12')
+      .text((l: SvgLink) => {
+        if (l.names[1]) {
+          return l.names[1];
+        }
       });
   }
 
@@ -218,6 +234,7 @@ export class AppComponent {
     let targetNodeId: number;
     let actionName: string;
     let currentLinkEnds: linkTuple = null;
+    let linkFound: linkTuple;
     let nodeFound: SvgNode;
     let stepShifted: boolean = false;
     const linkEndsTuples: linkTuple[] = [];
@@ -272,8 +289,18 @@ export class AppComponent {
           }
 
           // Record a link
-          currentLinkEnds = [actionName, currentNodeId, targetNodeId];
-          linkEndsTuples.push(currentLinkEnds);
+          linkFound = linkEndsTuples.find(tuple => {
+            return tuple[1] === currentNodeId && tuple[2] === targetNodeId;
+          });
+          // If a link for the same source and target already exists,
+          // add the current action name to the existing link's action name
+          // Otherwise, create a brand new link
+          if (linkFound) {
+            linkFound[0].push(actionName);
+          } else {
+            currentLinkEnds = [[actionName], currentNodeId, targetNodeId];
+            linkEndsTuples.push(currentLinkEnds);
+          }
           break;
         }
         default: {
@@ -288,11 +315,11 @@ export class AppComponent {
   createSvgLinks(linkEndsTuples: linkTuple[]): void {
     // Create the links
     let svgLink: SvgLink;
-    let name: string;
+    let names: string[];
     let source: number;
     let target: number;
     linkEndsTuples.forEach(linkEnds => {
-      name = linkEnds[0];
+      names = linkEnds[0];
 
       source = this.nodes.findIndex(node => {
         return node.id === linkEnds[1];
@@ -302,7 +329,7 @@ export class AppComponent {
         return node.id === linkEnds[2];
       });
 
-      svgLink = new SvgLink(name, source, target);
+      svgLink = new SvgLink(names, source, target);
       this.links.push(svgLink);
     });
   }
@@ -331,12 +358,7 @@ export class AppComponent {
       jsWorkflow,
       (value, key, path, depth, parent, parentKey, parentPath) => {
         if (value === 'global-actions') {
-          console.log('key: ' + key);
-          console.log('value: ' + value);
-          console.log('path: ' + path);
-          console.log('parent: ' + parent);
           delete parent['elements'];
-          console.log('is it here?');
         }
       }
     );
@@ -350,7 +372,7 @@ export class AppComponent {
     const radius: number = 30; // The only parameter specified by the user
     const margin: number = radius;
     const fontSize: number = radius / 3;
-    const circleDistance: number = radius * 5;
+    const circleDistance: number = radius * 8;
 
     this.initTestData();
 
