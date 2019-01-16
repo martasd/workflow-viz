@@ -88,6 +88,33 @@ export class AppComponent {
       });
   }
 
+  // Calculate the X coordinate of link label
+  labelX(nodes: SvgNode[], link: SvgLink): number {
+    const sourceNode = nodes.filter((val, i) => {
+      return i === link.source;
+    })[0];
+    const targetNode = nodes.filter((val, i) => {
+      return i === link.target;
+    })[0];
+    const x = sourceNode.x + (targetNode.x - sourceNode.x) / 2;
+    return x;
+  }
+
+  // Calculate the Y coordinate of link label
+  labelY(
+    nodes: SvgNode[],
+    link: SvgLink
+  ): { sourceNode: SvgNode; targetNode: SvgNode; y: number } {
+    const sourceNode = nodes.filter((val, i) => {
+      return i === link.source;
+    })[0];
+    const targetNode = nodes.filter((val, i) => {
+      return i === link.target;
+    })[0];
+    const y = sourceNode.y + (targetNode.y - sourceNode.y) / 2;
+    return { sourceNode, targetNode, y };
+  }
+
   createSvgLines(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
     nodes: SvgNode[],
@@ -145,22 +172,27 @@ export class AppComponent {
       .append('text')
       .attr('class', 'link')
       .attr('x', (l: SvgLink) => {
-        const sourceNode = nodes.filter((d, i) => {
-          return i === l.source;
-        })[0];
-        const targetNode = nodes.filter((d, i) => {
-          return i === l.target;
-        })[0];
-        return sourceNode.x + (targetNode.x - sourceNode.x) / 2;
+        return this.labelX(nodes, l);
       })
       .attr('y', (l: SvgLink) => {
-        const sourceNode = nodes.filter((d, i) => {
-          return i === l.source;
-        })[0];
-        const targetNode = nodes.filter((d, i) => {
-          return i === l.target;
-        })[0];
-        return sourceNode.y + (targetNode.y - sourceNode.y) / 2;
+        // If the flow is in the opposite direction,
+        // then shift the line label to avoid overlap
+        const { sourceNode, targetNode, y } = this.labelY(nodes, l);
+        if (sourceNode.x < targetNode.x) {
+          return y;
+        } else {
+          let labelShift: number = 0;
+          // Find link from the opposite direction if it exists
+          const oppositeLink: SvgLink = links.filter(link => {
+            return link.source === l.target && link.target === l.source;
+          })[0];
+          if (oppositeLink) {
+            oppositeLink.names.forEach(name => {
+              labelShift += fontSize;
+            });
+          }
+          return (targetNode.y - sourceNode.y) / 2 + sourceNode.y + labelShift;
+        }
       })
       .attr('font-size', fontSize.toString())
       .attr('fill', 'white')
@@ -170,15 +202,9 @@ export class AppComponent {
       })
       .append('tspan')
       .attr('x', (l: SvgLink) => {
-        const sourceNode = nodes.filter((d, i) => {
-          return i === l.source;
-        })[0];
-        const targetNode = nodes.filter((d, i) => {
-          return i === l.target;
-        })[0];
-        return sourceNode.x + (targetNode.x - sourceNode.x) / 2;
+        return this.labelX(nodes, l);
       })
-      .attr('dy', '12')
+      .attr('dy', fontSize.toString())
       .text((l: SvgLink) => {
         if (l.names[1]) {
           return l.names[1];
@@ -374,7 +400,7 @@ export class AppComponent {
     // Initialize lengths and sizes
     const radius: number = 30; // The only parameter specified by the user
     const margin: number = radius;
-    const fontSize: number = radius / 3;
+    const fontSize: number = radius / 2.6;
     const circleDistance: number = radius * 8;
 
     this.initTestData();
