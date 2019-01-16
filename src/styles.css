@@ -2,3 +2,7 @@
 svg {
   background-color: grey;
 }
+
+.label {
+  font-weight: bold;
+}

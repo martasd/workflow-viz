@@ -29,15 +29,6 @@ export class AppComponent {
   xmlSimple: string;
   xmlLong: string;
 
-  afuConfig = {
-    multiple: false,
-    formatsAllowed: '.xml',
-    maxSize: '1',
-    uploadAPI: {
-      url: 'https://example-file-upload-api'
-    }
-  };
-
   initTestData(): void {
     this.title = 'workflow-viz';
 
@@ -51,7 +42,7 @@ export class AppComponent {
     radius: number,
     fontSize: number
   ): void {
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
 
     const circleData = svg.selectAll('node').data(nodes);
 
@@ -139,7 +130,7 @@ export class AppComponent {
       .attr('markerUnits', 'strokeWidth')
       .append('path')
       .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
-      .attr('fill', 'white');
+      .attr('fill', 'black');
 
     const lineData = svg.selectAll('link').data(links);
 
@@ -149,7 +140,6 @@ export class AppComponent {
     const lineWidth: number = 2;
     const svgLines = lineGroup
       .append('line')
-      .attr('class', 'link')
       .attr('x1', function(l: SvgLink) {
         const sourceNode = nodes.filter((d, i) => {
           return i === l.source;
@@ -165,14 +155,14 @@ export class AppComponent {
         return targetNode.x;
       })
       .attr('fill', 'none')
-      .attr('stroke', 'white')
+      .attr('stroke', 'black')
       .attr('stroke-width', lineWidth.toString())
       .attr('marker-end', 'url(#arrow)');
 
     // Create line labels
     const svgLineLabels = lineGroup
       .append('text')
-      .attr('class', 'link')
+      .attr('class', 'label')
       .attr('x', (l: SvgLink) => {
         return this.labelX(nodes, l);
       })
@@ -197,7 +187,7 @@ export class AppComponent {
         }
       })
       .attr('font-size', fontSize.toString())
-      .attr('fill', 'white')
+      .attr('fill', 'orange')
       .attr('text-anchor', 'middle')
       .text((l: SvgLink) => {
         return l.names[0];
@@ -400,9 +390,9 @@ export class AppComponent {
     let canvasSize: { finalX: number; finalY: number };
 
     // Initialize lengths and sizes
-    const radius: number = 30; // The only parameter specified by the user
+    const radius: number = 40; // The only parameter specified by the user
     const margin: number = radius;
-    const fontSize: number = radius / 2.6;
+    const fontSize: number = radius / 2.7;
     const circleDistance: number = radius * 8;
 
     this.initTestData();
