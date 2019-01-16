@@ -25,10 +25,10 @@
 - Disable global actions
 - Show the workflow horizontally
 - Increase the line stroke width
+- Adjust labels for multiple paths with same source and origin
+- Adjust labels for links in opposite directions
+- Adjust the y coordinate of link labels
 
 # TODO
 
-- Resolve multiple paths with same source and origin
-- Break long link names
-- How to best visually represent the workflow?
 - Load XML from an external file.

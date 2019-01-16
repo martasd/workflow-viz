@@ -96,14 +96,15 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    const x = sourceNode.x + (targetNode.x - sourceNode.x) / 2;
+    const x = (targetNode.x - sourceNode.x) / 2 + sourceNode.x;
     return x;
   }
 
   // Calculate the Y coordinate of link label
   labelY(
     nodes: SvgNode[],
-    link: SvgLink
+    link: SvgLink,
+    lineWidth: number
   ): { sourceNode: SvgNode; targetNode: SvgNode; y: number } {
     const sourceNode = nodes.filter((val, i) => {
       return i === link.source;
@@ -111,7 +112,7 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    const y = sourceNode.y + (targetNode.y - sourceNode.y) / 2;
+    const y = (targetNode.y - sourceNode.y) / 2 + sourceNode.y - lineWidth;
     return { sourceNode, targetNode, y };
   }
 
@@ -145,6 +146,7 @@ export class AppComponent {
     const lineGroup = lineData.enter().append('g');
 
     // Create lines
+    const lineWidth: number = 2;
     const svgLines = lineGroup
       .append('line')
       .attr('class', 'link')
@@ -164,7 +166,7 @@ export class AppComponent {
       })
       .attr('fill', 'none')
       .attr('stroke', 'white')
-      .attr('stroke-width', '2')
+      .attr('stroke-width', lineWidth.toString())
       .attr('marker-end', 'url(#arrow)');
 
     // Create line labels
@@ -177,7 +179,7 @@ export class AppComponent {
       .attr('y', (l: SvgLink) => {
         // If the flow is in the opposite direction,
         // then shift the line label to avoid overlap
-        const { sourceNode, targetNode, y } = this.labelY(nodes, l);
+        const { sourceNode, targetNode, y } = this.labelY(nodes, l, lineWidth);
         if (sourceNode.x < targetNode.x) {
           return y;
         } else {
