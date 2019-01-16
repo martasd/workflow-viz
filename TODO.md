@@ -23,6 +23,8 @@
 - Cyclic references
 - Load xml WFDs from a separate file.
 - Disable global actions
+- Show the workflow horizontally
+- Increase the line stroke width
 
 # TODO
 

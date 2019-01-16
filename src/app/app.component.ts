@@ -95,21 +95,22 @@ export class AppComponent {
     fontSize: number,
     radius: number
   ): void {
-    const scale = radius / 2;
     // Create a line arrow using a marker
     // source: https://vanseodesign.com/web-design/svg-markers
+    // Scale the arrow along with the circle
+    const arrowScale = radius / 3;
     svg
       .append('defs')
       .append('marker')
       .attr('id', 'arrow')
       .attr('markerWidth', radius)
       .attr('markerHeight', radius)
-      .attr('refX', radius + scale)
-      .attr('refY', scale / 2)
+      .attr('refX', arrowScale * 2.42)
+      .attr('refY', arrowScale / 2)
       .attr('orient', 'auto')
       .attr('markerUnits', 'strokeWidth')
       .append('path')
-      .attr('d', `M0,0 L0,${scale} L${scale},${scale / 2} z`)
+      .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
       .attr('fill', 'white');
 
     const lineData = svg.selectAll('link').data(links);
@@ -136,6 +137,7 @@ export class AppComponent {
       })
       .attr('fill', 'none')
       .attr('stroke', 'white')
+      .attr('stroke-width', '2')
       .attr('marker-end', 'url(#arrow)');
 
     // Create line labels
@@ -272,13 +274,14 @@ export class AppComponent {
             return node.id === targetNodeId;
           });
 
-          // Shift x coordinate if it has not been shifted for the current step yet
+          // Shift y coordinate if it has not been shifted for the current step yet
           if (!nodeFound) {
             if (!stepShifted) {
-              x += circleDistance;
+              y += circleDistance;
               stepShifted = true;
             }
-            y += circleDistance;
+            // Always shift right
+            x += circleDistance;
 
             svgNode =
               targetNodeId === -1
