@@ -103,7 +103,7 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    const y = (targetNode.y - sourceNode.y) / 2 + sourceNode.y - lineWidth;
+    const y = (targetNode.y - sourceNode.y) / 2 + sourceNode.y - lineWidth * 2;
     return { sourceNode, targetNode, y };
   }
 
@@ -393,7 +393,7 @@ export class AppComponent {
     const radius: number = 40; // The only parameter specified by the user
     const margin: number = radius;
     const fontSize: number = radius / 2.7;
-    const circleDistance: number = radius * 8;
+    const circleDistance: number = radius * 7;
 
     this.initTestData();
 

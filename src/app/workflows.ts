@@ -964,11 +964,13 @@ const xmlLong: string = `<?xml version="1.0" encoding="utf-8"?>
                   <arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
                   <arg name="visibility">G</arg>
                 </function>
-                <!-- Set Property with curret Tag in Removal format so this can be removed when a user chooses to "Take" the current message -->
+                <!-- Set Property with curret Tag in Removal format so this
+                can be removed when a user chooses to "Take" the current message -->
                 <function type="beanshell">
                   <arg name="script">propertySet.setAsActualType("OriginalInitialActionRemoveTag", "-{OriginalInitialActionTag}"); </arg>
                 </function>
-                <!-- Reset previously removed Tag. This ensures the message is visible again in the expected initial Actions if processing is cancelled -->
+                <!-- Reset previously removed Tag. This ensures the message
+                is visible again in the expected initial Actions if processing is cancelled -->
                 <function type="class">
                   <arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
                   <arg name="tagInfo">{OriginalInitialActionTag}</arg>
@@ -1255,7 +1257,7 @@ const xmlLong: string = `<?xml version="1.0" encoding="utf-8"?>
             </unconditional-result>
           </results>
         </action>
-        <action id="902" name="delete">
+      <!--  <action id="902" name="delete">
           <restrict-to>
             <conditions type="AND">
               <condition type="class">
@@ -1293,7 +1295,7 @@ const xmlLong: string = `<?xml version="1.0" encoding="utf-8"?>
               </post-functions>
             </unconditional-result>
           </results>
-        </action>
+        </action> -->
       </actions>
     </step>
     <step id="10" name="Resolved">
