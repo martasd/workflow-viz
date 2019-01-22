@@ -15,7 +15,7 @@ export class ParseWorkflowService {
     return this.json;
   }
 
-  toJs(xml: string) {
+  toJs(xml: string): Element | ElementCompact {
     this.js = xml2js(xml);
     return this.js;
   }

@@ -28,6 +28,8 @@ export class AppComponent {
   links: SvgLink[] = [];
   xmlSimple: string;
   xmlLong: string;
+  simulation: any;
+  circleGroup: any;
 
   initTestData(): void {
     this.title = 'workflow-viz';
@@ -35,13 +37,54 @@ export class AppComponent {
     this.xmlLong = xmlLong;
   }
 
-  createSvgContainer(canvasSize: { width: number; height: number }): void {
+  createSvgContainer(canvasSize: { width: number; height: number }): any {
     // Create SVG container
-    const svg = d3
+    return d3
       .select('body')
       .append('svg')
       .attr('width', canvasSize.width.toString())
       .attr('height', canvasSize.height.toString());
+  }
+
+  createSvgCircles(
+    svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
+    nodes: SvgNode[],
+    radius: number,
+    fontSize: number
+  ): void {
+    const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
+
+    this.circleGroup = svg
+      .selectAll('node')
+      .data(this.nodes)
+      .enter()
+      .append('circle')
+      .attr('class', 'node')
+      .attr('cx', (d: SvgNode) => {
+        return d.x;
+      })
+      .attr('cy', (d: SvgNode) => {
+        return d.y;
+      })
+      .attr('r', radius)
+      .attr('fill', (d, i) => {
+        return color(i.toString());
+      });
+
+    // const svgCircleLabels = circleGroup
+    //   .append('text')
+    //   .attr('x', (d: SvgNode) => {
+    //     return d.x;
+    //   })
+    //   .attr('y', (d: SvgNode) => {
+    //     return d.y;
+    //   })
+    //   .attr('font-size', fontSize.toString())
+    //   .attr('text-anchor', 'middle')
+    //   .attr('alignment-baseline', 'middle')
+    //   .text((d: SvgNode) => {
+    //     return d.name;
+    //   });
   }
 
   createSvgNodes(obj: object): linkTuple[] {
@@ -60,7 +103,7 @@ export class AppComponent {
         case 'initial-actions': {
           // Initial node will have id 0
           currentNodeId = 0;
-          svgNode = new SvgNode('Initial', currentNodeId);
+          svgNode = new SvgNode('Initial', currentNodeId, null, null);
           this.nodes.push(svgNode);
           break;
         }
@@ -89,8 +132,8 @@ export class AppComponent {
           if (!nodeFound) {
             svgNode =
               targetNodeId === -1
-                ? new SvgNode('Final', targetNodeId)
-                : new SvgNode('', targetNodeId);
+                ? new SvgNode('Final', targetNodeId, null, null)
+                : new SvgNode('', targetNodeId, null, null);
 
             this.nodes.push(svgNode);
           }
@@ -159,19 +202,45 @@ export class AppComponent {
     );
   }
 
-  constructor(private parseWorkflowService: ParseWorkflowService) {
-    let jsWorkflow: Element | ElementCompact;
+  ticked(): void {
+    this.circleGroup
+      .attr('cx', d => {
+        return d.x;
+      })
+      .attr('cy', d => {
+        return d.y;
+      });
+  }
 
-    const canvasSize = { width: 800, height: 600 };
+  constructor(private parseWorkflowService: ParseWorkflowService) {
+    const canvasSize: { width: number; height: number } = {
+      width: 800,
+      height: 600
+    };
+
+    // Initialize lengths and sizes
+    const radius: number = 40; // The only parameter specified by the user
+    const fontSize: number = radius / 2.7;
 
     this.initTestData();
 
-    jsWorkflow = parseWorkflowService.toJs(this.xmlLong);
+    const svg: any = this.createSvgContainer(canvasSize);
+
+    this.createSvgCircles(svg, this.nodes, radius, fontSize);
+
+    // this.createSvgLines(svg, this.nodes, this.links, fontSize, radius);
+
+    const jsWorkflow: Element | ElementCompact = parseWorkflowService.toJs(
+      this.xmlLong
+    );
 
     this.removeGlobalActions(jsWorkflow);
 
     this.createGraph(jsWorkflow);
 
-    this.createSvgContainer(canvasSize);
+    // Create force simulation
+    this.simulation = d3.forceSimulation(this.nodes);
+
+    this.simulation.on('tick', this.ticked());
   }
 }
