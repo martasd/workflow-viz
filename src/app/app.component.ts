@@ -6,13 +6,14 @@ import { ParseWorkflowService } from './parse-workflow.service';
 import { xmlLong, xmlSimple } from './workflows';
 
 type linkTuple = [string[], number, number];
-declare var traverse: any;
+// declare var traverse: any;
 
 import deepdash from 'deepdash';
 import * as lodash from 'lodash';
+import * as traverse from 'traverse';
 const _ = deepdash(lodash);
 
-/* Draw the nodes and links in an SVG container
+/* Draw the nodes and links in an SVG container;
 
    source: https://stackoverflow.com/questions/28102089/simple-graph-of-nodes-and-links-without-using-force-layout
 */
