@@ -375,6 +375,14 @@ export class AppComponent {
 
     const svg: any = this.createSvgContainer(canvasSize);
 
+    const lineGroups: any = this.createSvgLines(
+      svg,
+      this.nodes,
+      this.links,
+      fontSize,
+      radius
+    );
+
     const circleGroups: any = this.createSvgCircleGroups(svg);
 
     const circles: any = this.createSvgCircles(
@@ -387,15 +395,6 @@ export class AppComponent {
       circleGroups,
       fontSize
     );
-
-    const lineGroup: any = this.createSvgLines(
-      svg,
-      this.nodes,
-      this.links,
-      fontSize,
-      radius
-    );
-
     // Create force simulation with a callback ticked function
     const simulation: any = d3
       .forceSimulation(this.nodes)
@@ -421,7 +420,7 @@ export class AppComponent {
             return d.y;
           });
 
-        lineGroup
+        lineGroups
           .attr('x1', d => {
             const source: SvgNode = this.nodes[d.source];
             return source.x;
