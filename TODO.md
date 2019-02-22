@@ -35,11 +35,13 @@
 
   - create an array of objects
   - clean up the component from svg element locations
-
   - call forceSimulation, passing in the array of objects
   - add one or more force functions (e.g. forceManyBody, forceCenter, forceCollide) to the system
   - set up a callback function to update the element positions after each tick
+  - update link positions
 
-- Load XML from an external file.
+# QUESTIONS
+
+- Why are the lines showing up like this?
 
 # IDEAS
