@@ -133,13 +133,10 @@ export class AppComponent {
     return { sourceNode, targetNode, y };
   }
 
-  createSvgLines(
+  createSvgLineGroups(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
-    nodes: SvgNode[],
-    links: SvgLink[],
-    fontSize: number,
     radius: number
-  ): d3.Selection<SVGLineElement, SvgLink, SVGSVGElement, {}> {
+  ): d3.Selection<SVGElement, SvgLink, SVGSVGElement, {}> {
     // Create a line arrow using a marker
     // source: https://vanseodesign.com/web-design/svg-markers
     // Scale the arrow along with the circle
@@ -158,18 +155,22 @@ export class AppComponent {
       .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
       .attr('fill', 'black');
 
-    const lineWidth: number = 2;
-    // Create lines
-    const lineGroup: d3.Selection<
-      SVGLineElement,
-      SvgLink,
-      SVGSVGElement,
-      {}
-    > = svg
+    return svg
       .selectAll('link')
       .data(this.links)
       .enter()
-      .append('g')
+      .append('g');
+  }
+
+  createSvgLines(
+    lineGroups: d3.Selection<SVGElement, SvgLink, SVGSVGElement, {}>,
+    nodes: SvgNode[],
+    links: SvgLink[],
+    fontSize: number
+  ): d3.Selection<SVGLineElement, SvgLink, SVGSVGElement, {}> {
+    const lineWidth: number = 2;
+
+    const lines: any = lineGroups
       .append('line')
       .attr('x1', function(l: SvgLink) {
         const sourceNode = nodes.filter((d, i) => {
@@ -191,7 +192,7 @@ export class AppComponent {
       .attr('marker-end', 'url(#arrow)');
 
     // Create line labels
-    const svgLineLabels = lineGroup
+    const svgLineLabels = lineGroups
       .append('text')
       .attr('class', 'label')
       .attr('x', (l: SvgLink) => {
@@ -234,7 +235,7 @@ export class AppComponent {
         }
       });
 
-    return lineGroup;
+    return lines;
   }
 
   createSvgNodes(obj: object): linkTuple[] {
@@ -375,12 +376,13 @@ export class AppComponent {
 
     const svg: any = this.createSvgContainer(canvasSize);
 
-    const lineGroups: any = this.createSvgLines(
-      svg,
+    const lineGroups: any = this.createSvgLineGroups(svg, radius);
+
+    const lines: any = this.createSvgLines(
+      lineGroups,
       this.nodes,
       this.links,
-      fontSize,
-      radius
+      fontSize
     );
 
     const circleGroups: any = this.createSvgCircleGroups(svg);
@@ -420,7 +422,7 @@ export class AppComponent {
             return d.y;
           });
 
-        lineGroups
+        lines
           .attr('x1', d => {
             const source: SvgNode = this.nodes[d.source];
             return source.x;
