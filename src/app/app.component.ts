@@ -45,23 +45,24 @@ export class AppComponent {
       .attr('height', canvasSize.height.toString());
   }
 
+  createSvgCircleGroups(
+    svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>
+  ): d3.Selection<SVGElement, SvgNode, SVGSVGElement, {}> {
+    return svg
+      .selectAll('node')
+      .data(this.nodes)
+      .enter()
+      .append('g');
+  }
+
   createSvgCircles(
-    svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
+    circleGroups: d3.Selection<SVGElement, SvgNode, SVGSVGElement, {}>,
     nodes: SvgNode[],
     radius: number
   ): d3.Selection<SVGCircleElement, SvgNode, SVGSVGElement, {}> {
     const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
 
-    const circleGroup: d3.Selection<
-      SVGCircleElement,
-      SvgNode,
-      SVGSVGElement,
-      {}
-    > = svg
-      .selectAll('node')
-      .data(this.nodes)
-      .enter()
-      .append('g')
+    return circleGroups
       .append('circle')
       .attr('class', 'node')
       .attr('cx', (d: SvgNode) => {
@@ -74,12 +75,10 @@ export class AppComponent {
       .attr('fill', (d, i) => {
         return color(i.toString());
       });
-
-    return circleGroup;
   }
 
   createSvgCircleLabels(
-    circleGroup: d3.Selection<SVGCircleElement, SvgNode, SVGSVGElement, {}>,
+    circleGroups: d3.Selection<SVGElement, SvgNode, SVGSVGElement, {}>,
     fontSize: number
   ): d3.Selection<SVGTextElement, SvgNode, SVGSVGElement, {}> {
     // Create labels
@@ -88,7 +87,7 @@ export class AppComponent {
       SvgNode,
       SVGSVGElement,
       {}
-    > = circleGroup
+    > = circleGroups
       .append('text')
       .attr('x', (d: SvgNode) => {
         return d.x;
@@ -376,9 +375,18 @@ export class AppComponent {
 
     const svg: any = this.createSvgContainer(canvasSize);
 
-    const circleGroup: any = this.createSvgCircles(svg, this.nodes, radius);
+    const circleGroups: any = this.createSvgCircleGroups(svg);
 
-    const circleLabels: any = this.createSvgCircleLabels(circleGroup, fontSize);
+    const circles: any = this.createSvgCircles(
+      circleGroups,
+      this.nodes,
+      radius
+    );
+
+    const circleLabels: any = this.createSvgCircleLabels(
+      circleGroups,
+      fontSize
+    );
 
     const lineGroup: any = this.createSvgLines(
       svg,
@@ -397,7 +405,7 @@ export class AppComponent {
         d3.forceCenter(canvasSize.width / 2, canvasSize.height / 2)
       )
       .on('tick', () => {
-        circleGroup
+        circles
           .attr('cx', d => {
             return d.x;
           })
