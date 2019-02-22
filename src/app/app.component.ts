@@ -48,8 +48,7 @@ export class AppComponent {
   createSvgCircles(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
     nodes: SvgNode[],
-    radius: number,
-    fontSize: number
+    radius: number
   ): d3.Selection<SVGCircleElement, SvgNode, SVGSVGElement, {}> {
     const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
 
@@ -62,6 +61,7 @@ export class AppComponent {
       .selectAll('node')
       .data(this.nodes)
       .enter()
+      .append('g')
       .append('circle')
       .attr('class', 'node')
       .attr('cx', (d: SvgNode) => {
@@ -75,8 +75,20 @@ export class AppComponent {
         return color(i.toString());
       });
 
+    return circleGroup;
+  }
+
+  createSvgCircleLabels(
+    circleGroup: d3.Selection<SVGCircleElement, SvgNode, SVGSVGElement, {}>,
+    fontSize: number
+  ): d3.Selection<SVGTextElement, SvgNode, SVGSVGElement, {}> {
     // Create labels
-    const svgCircleLabels = circleGroup
+    const svgCircleLabels: d3.Selection<
+      SVGTextElement,
+      SvgNode,
+      SVGSVGElement,
+      {}
+    > = circleGroup
       .append('text')
       .attr('x', (d: SvgNode) => {
         return d.x;
@@ -91,7 +103,7 @@ export class AppComponent {
         return d.name;
       });
 
-    return circleGroup;
+    return svgCircleLabels;
   }
 
   // Calculate the X coordinate of link label
@@ -364,12 +376,9 @@ export class AppComponent {
 
     const svg: any = this.createSvgContainer(canvasSize);
 
-    const circleGroup: any = this.createSvgCircles(
-      svg,
-      this.nodes,
-      radius,
-      fontSize
-    );
+    const circleGroup: any = this.createSvgCircles(svg, this.nodes, radius);
+
+    const circleLabels: any = this.createSvgCircleLabels(circleGroup, fontSize);
 
     const lineGroup: any = this.createSvgLines(
       svg,
@@ -393,6 +402,14 @@ export class AppComponent {
             return d.x;
           })
           .attr('cy', d => {
+            return d.y;
+          });
+
+        circleLabels
+          .attr('x', d => {
+            return d.x;
+          })
+          .attr('y', d => {
             return d.y;
           });
 
