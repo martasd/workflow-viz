@@ -128,7 +128,7 @@ export class AppComponent {
     links: SvgLink[],
     fontSize: number,
     radius: number
-  ): d3.Selection<SVGGElement, SvgLink, SVGSVGElement, {}> {
+  ): d3.Selection<SVGLineElement, SvgLink, SVGSVGElement, {}> {
     // Create a line arrow using a marker
     // source: https://vanseodesign.com/web-design/svg-markers
     // Scale the arrow along with the circle
@@ -147,13 +147,18 @@ export class AppComponent {
       .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
       .attr('fill', 'black');
 
-    const lineData = svg.selectAll('link').data(links);
-
-    const lineGroup = lineData.enter().append('g');
-
-    // Create lines
     const lineWidth: number = 2;
-    const svgLines = lineGroup
+    // Create lines
+    const lineGroup: d3.Selection<
+      SVGLineElement,
+      SvgLink,
+      SVGSVGElement,
+      {}
+    > = svg
+      .selectAll('link')
+      .data(this.links)
+      .enter()
+      .append('g')
       .append('line')
       .attr('x1', function(l: SvgLink) {
         const sourceNode = nodes.filter((d, i) => {
@@ -393,16 +398,20 @@ export class AppComponent {
 
         lineGroup
           .attr('x1', d => {
-            return d.source.x;
+            const source: SvgNode = this.nodes[d.source];
+            return source.x;
           })
           .attr('y1', d => {
-            return d.source.y;
+            const source: SvgNode = this.nodes[d.source];
+            return source.y;
           })
           .attr('x2', d => {
-            return d.target.x;
+            const target: SvgNode = this.nodes[d.target];
+            return target.x;
           })
           .attr('y2', d => {
-            return d.target.y;
+            const target: SvgNode = this.nodes[d.target];
+            return target.y;
           });
       });
   }
