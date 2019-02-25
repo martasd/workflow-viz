@@ -405,6 +405,12 @@ export class AppComponent {
         'center',
         d3.forceCenter(canvasSize.width / 2, canvasSize.height / 2)
       )
+      .force(
+        'collision',
+        d3.forceCollide().radius(d => {
+          return radius;
+        })
+      )
       .on('tick', () => {
         circles
           .attr('cx', d => {
