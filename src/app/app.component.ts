@@ -10,6 +10,7 @@ declare var traverse: any;
 
 import deepdash from 'deepdash';
 import * as lodash from 'lodash';
+import { line } from 'd3';
 // import * as traverse from 'traverse';
 const _ = deepdash(lodash);
 
@@ -165,11 +166,8 @@ export class AppComponent {
   createSvgLines(
     lineGroups: d3.Selection<SVGElement, SvgLink, SVGSVGElement, {}>,
     nodes: SvgNode[],
-    links: SvgLink[],
-    fontSize: number
+    lineWidth: number
   ): d3.Selection<SVGLineElement, SvgLink, SVGSVGElement, {}> {
-    const lineWidth: number = 2;
-
     const lines: any = lineGroups
       .append('line')
       .attr('x1', function(l: SvgLink) {
@@ -191,6 +189,16 @@ export class AppComponent {
       .attr('stroke-width', lineWidth.toString())
       .attr('marker-end', 'url(#arrow)');
 
+    return lines;
+  }
+
+  createSvgLineLabels(
+    lineGroups: d3.Selection<SVGElement, SvgLink, SVGSVGElement, {}>,
+    nodes: SvgNode[],
+    links: SvgLink[],
+    fontSize: number,
+    lineWidth: number
+  ): d3.Selection<SVGElement, SvgLink, SVGSVGElement, {}> {
     // Create line labels
     const svgLineLabels = lineGroups
       .append('text')
@@ -218,24 +226,24 @@ export class AppComponent {
           return (targetNode.y - sourceNode.y) / 2 + sourceNode.y + labelShift;
         }
       })
-      .attr('font-size', fontSize.toString())
+      .attr('font-size', (fontSize * (4 / 5)).toString())
       .attr('fill', 'orange')
       .attr('text-anchor', 'middle')
       .text((l: SvgLink) => {
         return l.names[0];
-      })
-      .append('tspan')
-      .attr('x', (l: SvgLink) => {
-        return this.labelX(nodes, l);
-      })
-      .attr('dy', fontSize.toString())
-      .text((l: SvgLink) => {
-        if (l.names[1]) {
-          return l.names[1];
-        }
       });
+    // .append('tspan')
+    // .attr('x', (l: SvgLink) => {
+    //   return this.labelX(nodes, l);
+    // })
+    // .attr('dy', fontSize.toString())
+    // .text((l: SvgLink) => {
+    //   if (l.names[1]) {
+    //     return l.names[1];
+    //   }
+    // });
 
-    return lines;
+    return svgLineLabels;
   }
 
   createSvgNodes(obj: object): linkTuple[] {
@@ -362,6 +370,7 @@ export class AppComponent {
     // Initialize lengths and sizes
     const radius: number = 40; // The only parameter specified by the user
     const fontSize: number = radius / 2.7;
+    const lineWidth: number = 2;
 
     this.initXmlData();
 
@@ -378,11 +387,14 @@ export class AppComponent {
 
     const lineGroups: any = this.createSvgLineGroups(svg, radius);
 
-    const lines: any = this.createSvgLines(
+    const lines: any = this.createSvgLines(lineGroups, this.nodes, lineWidth);
+
+    const lineLabels: any = this.createSvgLineLabels(
       lineGroups,
       this.nodes,
       this.links,
-      fontSize
+      fontSize,
+      lineWidth
     );
 
     const circleGroups: any = this.createSvgCircleGroups(svg);
@@ -400,7 +412,7 @@ export class AppComponent {
     // Create force simulation with a callback ticked function
     const simulation: any = d3
       .forceSimulation(this.nodes)
-      .force('charge', d3.forceManyBody())
+      .force('charge', d3.forceManyBody().strength(-40))
       .force(
         'center',
         d3.forceCenter(canvasSize.width / 2, canvasSize.height / 2)
@@ -444,6 +456,19 @@ export class AppComponent {
           .attr('y2', d => {
             const target: SvgNode = this.nodes[d.target];
             return target.y;
+          });
+
+        lineLabels
+          .attr('x', (l: SvgLink) => {
+            return this.labelX(this.nodes, l);
+          })
+          .attr('y', (l: SvgLink) => {
+            const { sourceNode, targetNode, y } = this.labelY(
+              this.nodes,
+              l,
+              lineWidth
+            );
+            return y;
           });
       });
   }
