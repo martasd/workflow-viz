@@ -60,7 +60,7 @@ export class AppComponent {
     circleGroups: d3.Selection<SVGElement, SvgNode, SVGSVGElement, {}>,
     nodes: SvgNode[],
     radius: number
-  ): d3.Selection<SVGCircleElement, SvgNode, SVGSVGElement, {}> {
+  ): any {
     const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
 
     return circleGroups
@@ -425,36 +425,36 @@ export class AppComponent {
       )
       .on('tick', () => {
         circles
-          .attr('cx', d => {
-            return d.x;
+          .attr('cx', node => {
+            return node.x;
           })
-          .attr('cy', d => {
-            return d.y;
+          .attr('cy', node => {
+            return node.y;
           });
 
         circleLabels
-          .attr('x', d => {
-            return d.x;
+          .attr('x', node => {
+            return node.x;
           })
-          .attr('y', d => {
-            return d.y;
+          .attr('y', node => {
+            return node.y;
           });
 
         lines
-          .attr('x1', d => {
-            const source: SvgNode = this.nodes[d.source];
+          .attr('x1', node => {
+            const source: SvgNode = this.nodes[node.source];
             return source.x;
           })
-          .attr('y1', d => {
-            const source: SvgNode = this.nodes[d.source];
+          .attr('y1', node => {
+            const source: SvgNode = this.nodes[node.source];
             return source.y;
           })
-          .attr('x2', d => {
-            const target: SvgNode = this.nodes[d.target];
+          .attr('x2', node => {
+            const target: SvgNode = this.nodes[node.target];
             return target.x;
           })
-          .attr('y2', d => {
-            const target: SvgNode = this.nodes[d.target];
+          .attr('y2', node => {
+            const target: SvgNode = this.nodes[node.target];
             return target.y;
           });
 
@@ -471,5 +471,31 @@ export class AppComponent {
             return y;
           });
       });
+
+    const dragDrop = d3
+      .drag()
+      .on('start', node => {
+        node.fx = node.x;
+        node.fy = node.y;
+      })
+      .on('drag', node => {
+ circles
+          .attr('cx', node.x = d3.event.x;
+          })
+          .attr('cy', node => {
+            return node.y;
+          });
+        simulation.alphaTarget(0.7).restart();
+        node.fx = d3.event.x;
+        node.fy = d3.event.y;
+      })
+      .on('end', node => {
+        if (!d3.event.active) {
+          simulation.alphaTarget(0);
+        }
+        node.fx = null;
+        node.fy = null;
+      });
+    circles.call(dragDrop);
   }
 }
