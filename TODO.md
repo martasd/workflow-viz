@@ -31,7 +31,7 @@
 
 # TODO
 
-- Show link labels
+- Refactor and organize the code
 
 # QUESTIONS
 

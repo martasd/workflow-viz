@@ -363,8 +363,8 @@ export class AppComponent {
 
   constructor(private parseWorkflowService: ParseWorkflowService) {
     const canvasSize: { width: number; height: number } = {
-      width: 1500,
-      height: 1500
+      width: 2000,
+      height: 2000
     };
 
     // Initialize lengths and sizes
@@ -412,7 +412,7 @@ export class AppComponent {
     // Create force simulation with a callback ticked function
     const simulation: any = d3
       .forceSimulation(this.nodes)
-      .force('charge', d3.forceManyBody().strength(-40))
+      .force('charge', d3.forceManyBody().strength(-30))
       .force(
         'center',
         d3.forceCenter(canvasSize.width / 2, canvasSize.height / 2)
@@ -479,12 +479,6 @@ export class AppComponent {
         node.fy = node.y;
       })
       .on('drag', node => {
- circles
-          .attr('cx', node.x = d3.event.x;
-          })
-          .attr('cy', node => {
-            return node.y;
-          });
         simulation.alphaTarget(0.7).restart();
         node.fx = d3.event.x;
         node.fy = d3.event.y;
@@ -496,6 +490,6 @@ export class AppComponent {
         node.fx = null;
         node.fy = null;
       });
-    circles.call(dragDrop);
+    circleGroups.call(dragDrop);
   }
 }
