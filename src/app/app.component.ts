@@ -262,7 +262,14 @@ export class AppComponent {
         case 'initial-actions': {
           // Initial node will have id 0
           currentNodeId = 0;
-          svgNode = new SvgNode('Initial', currentNodeId, null, null);
+          svgNode = new SvgNode(
+            'Initial',
+            currentNodeId,
+            null,
+            null,
+            null,
+            null
+          );
           this.nodes.push(svgNode);
           break;
         }
@@ -291,8 +298,8 @@ export class AppComponent {
           if (!nodeFound) {
             svgNode =
               targetNodeId === -1
-                ? new SvgNode('Final', targetNodeId, null, null)
-                : new SvgNode('', targetNodeId, null, null);
+                ? new SvgNode('Final', targetNodeId, null, null, null, null)
+                : new SvgNode('', targetNodeId, null, null, null, null);
 
             this.nodes.push(svgNode);
           }
@@ -474,16 +481,16 @@ export class AppComponent {
 
     const dragDrop = d3
       .drag()
-      .on('start', node => {
+      .on('start', (node: SvgNode) => {
         node.fx = node.x;
         node.fy = node.y;
       })
-      .on('drag', node => {
+      .on('drag', (node: SvgNode) => {
         simulation.alphaTarget(0.7).restart();
         node.fx = d3.event.x;
         node.fy = d3.event.y;
       })
-      .on('end', node => {
+      .on('end', (node: SvgNode) => {
         if (!d3.event.active) {
           simulation.alphaTarget(0);
         }
