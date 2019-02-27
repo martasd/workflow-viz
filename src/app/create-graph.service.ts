@@ -17,7 +17,7 @@ export class CreateGraphService {
     obj: object,
     margin: number,
     circleDistance: number
-  ): { nodes: SvgNode[]; linkEndsTuples: linkTuple[]; x: number; y: number } {
+  ): [SvgNode[], Array<[string[], number, number]>, number, number] {
     let nodes: SvgNode[];
     let x: number = margin;
     let y: number = margin * 10;
@@ -98,8 +98,7 @@ export class CreateGraphService {
 
     y *= 2;
 
-    nodes = this.nodes;
-    return { nodes, linkEndsTuples, x, y };
+    return [this.nodes, linkEndsTuples, x, y];
   }
 
   createSvgLinks(linkEndsTuples: linkTuple[]): SvgLink[] {

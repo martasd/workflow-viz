@@ -180,7 +180,7 @@ export class AppComponent {
   createSvg(
     nodes: SvgNode[],
     links: SvgLink[],
-    canvasSize: { finalX: number; finalY: number },
+    canvasSize: { width: number; height: number },
     radius: number,
     fontSize: number
   ): void {
@@ -188,8 +188,8 @@ export class AppComponent {
     const svg = d3
       .select('body')
       .append('svg')
-      .attr('width', canvasSize.finalX.toString())
-      .attr('height', canvasSize.finalY.toString());
+      .attr('width', canvasSize.width.toString())
+      .attr('height', canvasSize.height.toString());
 
     const drag = d3.drag().on('drag', function(d: SvgNode, i, group) {
       d.x += d3.event.dx;
@@ -230,8 +230,6 @@ export class AppComponent {
     private parseWorkflowService: ParseWorkflowService,
     private createGraphService: CreateGraphService
   ) {
-    let jsWorkflow: Element | ElementCompact;
-
     // Initialize lengths and sizes
     const radius: number = 40; // The only parameter specified by the user
     const margin: number = radius * 1.6;
@@ -240,17 +238,23 @@ export class AppComponent {
 
     this.initTestData();
 
-    jsWorkflow = parseWorkflowService.toJs(this.xmlFnb);
+    const jsWorkflow: Element | ElementCompact = parseWorkflowService.toJs(
+      this.xmlFnb
+    );
     this.removeGlobalActions(jsWorkflow);
 
     // Create nodes and links from XML JS object
-    const { nodes, linkEndsTuples, x, y } = createGraphService.createSvgNodes(
+    let x: number;
+    let y: number;
+    let nodes: SvgNode[];
+    let linkEndsTuples: linkTuple[];
+    [nodes, linkEndsTuples, x, y] = createGraphService.createSvgNodes(
       jsWorkflow,
       margin,
       circleDistance
     );
 
-    const canvasSize = { finalX: x + margin, finalY: y + margin };
+    const canvasSize = { width: x + margin, height: y + margin };
 
     const links: SvgLink[] = createGraphService.createSvgLinks(linkEndsTuples);
 
