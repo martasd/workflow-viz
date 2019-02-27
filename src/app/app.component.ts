@@ -89,8 +89,9 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    const x = (targetNode.x - sourceNode.x) / 2 + sourceNode.x;
-    return x;
+    // const x = (targetNode.x - sourceNode.x) / 2 + sourceNode.x;
+    const nodeDistance = targetNode.y - sourceNode.y;
+    return sourceNode.x + nodeDistance * 0.3;
   }
 
   // Calculate the Y coordinate of link label
@@ -150,9 +151,11 @@ export class AppComponent {
           return i === l.target;
         })[0];
 
+        const nodeDistance = targetNode.y - sourceNode.y;
+
         return `M ${sourceNode.x} ${sourceNode.y}
-                C ${sourceNode.x + 200} ${sourceNode.y + 20}
-                  ${targetNode.x + 200} ${targetNode.y - 20}
+                C ${sourceNode.x + nodeDistance * 0.4} ${sourceNode.y + 20}
+                  ${targetNode.x + nodeDistance * 0.4} ${targetNode.y - 20}
                   ${targetNode.x} ${targetNode.y}`;
       })
       .attr('fill', 'none')
@@ -248,7 +251,7 @@ export class AppComponent {
     margin: number,
     circleDistance: number
   ): { linkEndsTuples: linkTuple[]; x: number; y: number } {
-    let x: number = margin * 5;
+    let x: number = margin * 25;
     let y: number = margin;
     let svgNode: SvgNode;
     let currentNodeId: number;
@@ -333,7 +336,7 @@ export class AppComponent {
       }
     });
 
-    x *= 5;
+    x *= 2;
 
     return { linkEndsTuples, x, y };
   }
@@ -398,7 +401,7 @@ export class AppComponent {
     const radius: number = 40; // The only parameter specified by the user
     const margin: number = radius;
     const fontSize: number = radius / 2.7;
-    const circleDistance: number = radius * 8;
+    const circleDistance: number = radius * 5.5;
 
     this.initTestData();
 
