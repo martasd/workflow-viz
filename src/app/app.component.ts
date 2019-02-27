@@ -106,7 +106,6 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    // const y = (targetNode.y - sourceNode.y) / 2 + sourceNode.y - lineWidth * 2;
     const nodeDistance = sourceNode.x - targetNode.x;
     const y = sourceNode.y + nodeDistance * 0.3;
     return { sourceNode, targetNode, y };
@@ -119,24 +118,6 @@ export class AppComponent {
     fontSize: number,
     radius: number
   ): void {
-    // Create a line arrow using a marker
-    // source: https://vanseodesign.com/web-design/svg-markers
-    // Scale the arrow along with the circle
-    const arrowScale = radius / 3;
-    // svg
-    //   .append('defs')
-    //   .append('marker')
-    //   .attr('id', 'arrow')
-    //   .attr('markerWidth', radius)
-    //   .attr('markerHeight', radius)
-    //   .attr('refX', arrowScale * 2.42)
-    //   .attr('refY', arrowScale / 2)
-    //   .attr('orient', 'auto')
-    //   .attr('markerUnits', 'strokeWidth')
-    //   .append('path')
-    //   .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
-    //   .attr('fill', 'black');
-
     const lineData = svg.selectAll('link').data(links);
 
     const lineGroup = lineData.enter().append('g');
@@ -163,7 +144,6 @@ export class AppComponent {
       .attr('fill', 'none')
       .attr('stroke', 'black')
       .attr('stroke-width', lineWidth.toString());
-    // .attr('marker-end', 'url(#arrow)');
 
     // Create line labels
     const svgLineLabels = lineGroup
@@ -284,16 +264,8 @@ export class AppComponent {
             return node.id === targetNodeId;
           });
 
-          // Shift y coordinate if it has not been shifted for the current step yet
-
           if (!nodeFound) {
             x += circleDistance;
-            // if (!stepShifted) {
-            //   y += circleDistance;
-            //   stepShifted = true;
-            // }
-            // Always shift right
-            // x += circleDistance;
 
             svgNode =
               targetNodeId === -1
