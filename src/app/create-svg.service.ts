@@ -16,11 +16,14 @@ export class CreateSvgService {
   ): void {
     const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
 
-    const circleData = svg.selectAll('node').data(nodes);
+    const circleGroup = svg
+      .selectAll('node')
+      .data(nodes)
+      .enter()
+      .append('g');
 
-    const circleGroup = circleData.enter().append('g');
-
-    const svgCircles = circleGroup
+    // Create graphical nodes (ellipses)
+    circleGroup
       .append('ellipse')
       .attr('class', 'node')
       .attr('cx', (d: SvgNode) => {
@@ -35,7 +38,8 @@ export class CreateSvgService {
         return color(i.toString());
       });
 
-    const svgCircleLabels = circleGroup
+    // Create labels
+    circleGroup
       .append('text')
       .attr('x', (d: SvgNode) => {
         return d.x;
@@ -52,7 +56,7 @@ export class CreateSvgService {
   }
 
   // Calculate the X coordinate of link label
-  labelX(nodes: SvgNode[], link: SvgLink): number {
+  private labelX(nodes: SvgNode[], link: SvgLink): number {
     const sourceNode = nodes.filter((val, i) => {
       return i === link.source;
     })[0];
@@ -64,7 +68,7 @@ export class CreateSvgService {
   }
 
   // Calculate the Y coordinate of link label
-  labelY(
+  private labelY(
     nodes: SvgNode[],
     link: SvgLink,
     lineWidth: number
@@ -93,7 +97,7 @@ export class CreateSvgService {
 
     // Create lines
     const lineWidth: number = 2;
-    const svgLines = lineGroup
+    lineGroup
       .append('path')
       .attr('d', (l: SvgLink) => {
         const sourceNode = nodes.filter((d, i) => {
@@ -115,7 +119,7 @@ export class CreateSvgService {
       .attr('stroke-width', lineWidth.toString());
 
     // Create line labels
-    const svgLineLabels = lineGroup
+    lineGroup
       .append('text')
       .attr('class', 'label')
       .attr('x', (l: SvgLink) => {
@@ -158,25 +162,6 @@ export class CreateSvgService {
       .append('svg')
       .attr('width', canvasSize.width.toString())
       .attr('height', canvasSize.height.toString());
-
-    const drag = d3.drag().on('drag', function(d: SvgNode, i, group) {
-      d.x += d3.event.dx;
-      d.y += d3.event.dy;
-      d3.select(this)
-        .attr('cx', d.x)
-        .attr('cy', d.y);
-      links.forEach(function(l: SvgLink, li) {
-        if (l.source === i) {
-          d3.select(this)
-            .attr('x1', d.x)
-            .attr('y1', d.y);
-        } else if (l.target === i) {
-          d3.select(this)
-            .attr('x2', d.x)
-            .attr('y2', d.y);
-        }
-      });
-    });
 
     this.createSvgLines(svg, nodes, links, fontSize, radius);
 

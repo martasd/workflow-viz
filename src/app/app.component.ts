@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import * as d3 from 'd3';
 import { Element, ElementCompact } from 'xml-js';
 import { CreateGraphService } from './create-graph.service';
 import { CreateSvgService } from './create-svg.service';
@@ -23,16 +22,12 @@ const _ = deepdash(lodash);
 })
 export class AppComponent {
   title: string;
-  testData: object;
-  nodes: SvgNode[] = [];
-  links: SvgLink[] = [];
   xmlSimple: string;
   xmlLong: string;
   xmlFnb: string;
 
   private initTestData(): void {
     this.title = 'workflow-viz';
-
     this.xmlSimple = xmlSimple;
     this.xmlLong = xmlLong;
     this.xmlFnb = xmlFnb;
