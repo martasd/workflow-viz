@@ -28,6 +28,7 @@
 - Adjust labels for multiple paths with same source and origin
 - Adjust labels for links in opposite directions
 - Adjust the y coordinate of link labels
+- Removed bootstrap
 
 # TODO
 
