@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { Element, ElementCompact } from 'xml-js';
 import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
-import { xmlLong, xmlSimple } from './workflows';
+import { xmlLong, xmlSimple, xmlFnb } from './workflows';
 
 type linkTuple = [string[], number, number];
 declare var traverse: any;
@@ -28,12 +28,14 @@ export class AppComponent {
   links: SvgLink[] = [];
   xmlSimple: string;
   xmlLong: string;
+  xmlFnb: string;
 
   initTestData(): void {
     this.title = 'workflow-viz';
 
     this.xmlSimple = xmlSimple;
     this.xmlLong = xmlLong;
+    this.xmlFnb = xmlFnb;
   }
 
   createSvgCircles(
@@ -139,20 +141,19 @@ export class AppComponent {
     // Create lines
     const lineWidth: number = 2;
     const svgLines = lineGroup
-      .append('line')
-      .attr('x1', function(l: SvgLink) {
+      .append('path')
+      .attr('d', (l: SvgLink) => {
         const sourceNode = nodes.filter((d, i) => {
           return i === l.source;
         })[0];
-        d3.select(this).attr('y1', sourceNode.y);
-        return sourceNode.x;
-      })
-      .attr('x2', function(l: SvgLink) {
         const targetNode = nodes.filter((d, i) => {
           return i === l.target;
         })[0];
-        d3.select(this).attr('y2', targetNode.y);
-        return targetNode.x;
+
+        return `M ${sourceNode.x} ${sourceNode.y}
+                C ${sourceNode.x + 200} ${sourceNode.y + 20}
+                  ${targetNode.x + 200} ${targetNode.y - 20}
+                  ${targetNode.x} ${targetNode.y}`;
       })
       .attr('fill', 'none')
       .attr('stroke', 'black')
@@ -247,7 +248,7 @@ export class AppComponent {
     margin: number,
     circleDistance: number
   ): { linkEndsTuples: linkTuple[]; x: number; y: number } {
-    let x: number = margin;
+    let x: number = margin * 5;
     let y: number = margin;
     let svgNode: SvgNode;
     let currentNodeId: number;
@@ -293,13 +294,15 @@ export class AppComponent {
           });
 
           // Shift y coordinate if it has not been shifted for the current step yet
+
           if (!nodeFound) {
-            if (!stepShifted) {
-              y += circleDistance;
-              stepShifted = true;
-            }
+            y += circleDistance;
+            // if (!stepShifted) {
+            //   y += circleDistance;
+            //   stepShifted = true;
+            // }
             // Always shift right
-            x += circleDistance;
+            // x += circleDistance;
 
             svgNode =
               targetNodeId === -1
@@ -329,6 +332,8 @@ export class AppComponent {
         }
       }
     });
+
+    x *= 5;
 
     return { linkEndsTuples, x, y };
   }
@@ -393,11 +398,11 @@ export class AppComponent {
     const radius: number = 40; // The only parameter specified by the user
     const margin: number = radius;
     const fontSize: number = radius / 2.7;
-    const circleDistance: number = radius * 7;
+    const circleDistance: number = radius * 8;
 
     this.initTestData();
 
-    jsWorkflow = parseWorkflowService.toJs(this.xmlLong);
+    jsWorkflow = parseWorkflowService.toJs(this.xmlFnb);
     this.removeGlobalActions(jsWorkflow);
 
     canvasSize = this.createGraph(jsWorkflow, margin, circleDistance);
