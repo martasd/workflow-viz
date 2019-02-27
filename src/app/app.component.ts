@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { Element, ElementCompact } from 'xml-js';
 import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
-import { xmlLong, xmlSimple, xmlFnb } from './workflows';
+import { xmlFnb, xmlLong, xmlSimple } from './workflows';
 
 type linkTuple = [string[], number, number];
 declare var traverse: any;
@@ -52,7 +52,7 @@ export class AppComponent {
     // .call(drag);
 
     const svgCircles = circleGroup
-      .append('circle')
+      .append('ellipse')
       .attr('class', 'node')
       .attr('cx', (d: SvgNode) => {
         return d.x;
@@ -60,7 +60,8 @@ export class AppComponent {
       .attr('cy', (d: SvgNode) => {
         return d.y;
       })
-      .attr('r', radius)
+      .attr('rx', radius * 1.5)
+      .attr('ry', radius)
       .attr('fill', (d, i) => {
         return color(i.toString());
       });
@@ -89,9 +90,8 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    // const x = (targetNode.x - sourceNode.x) / 2 + sourceNode.x;
-    const nodeDistance = targetNode.y - sourceNode.y;
-    return sourceNode.x + nodeDistance * 0.3;
+    const x = (targetNode.x - sourceNode.x) / 2 + sourceNode.x;
+    return x;
   }
 
   // Calculate the Y coordinate of link label
@@ -106,7 +106,9 @@ export class AppComponent {
     const targetNode = nodes.filter((val, i) => {
       return i === link.target;
     })[0];
-    const y = (targetNode.y - sourceNode.y) / 2 + sourceNode.y - lineWidth * 2;
+    // const y = (targetNode.y - sourceNode.y) / 2 + sourceNode.y - lineWidth * 2;
+    const nodeDistance = sourceNode.x - targetNode.x;
+    const y = sourceNode.y + nodeDistance * 0.3;
     return { sourceNode, targetNode, y };
   }
 
@@ -121,19 +123,19 @@ export class AppComponent {
     // source: https://vanseodesign.com/web-design/svg-markers
     // Scale the arrow along with the circle
     const arrowScale = radius / 3;
-    svg
-      .append('defs')
-      .append('marker')
-      .attr('id', 'arrow')
-      .attr('markerWidth', radius)
-      .attr('markerHeight', radius)
-      .attr('refX', arrowScale * 2.42)
-      .attr('refY', arrowScale / 2)
-      .attr('orient', 'auto')
-      .attr('markerUnits', 'strokeWidth')
-      .append('path')
-      .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
-      .attr('fill', 'black');
+    // svg
+    //   .append('defs')
+    //   .append('marker')
+    //   .attr('id', 'arrow')
+    //   .attr('markerWidth', radius)
+    //   .attr('markerHeight', radius)
+    //   .attr('refX', arrowScale * 2.42)
+    //   .attr('refY', arrowScale / 2)
+    //   .attr('orient', 'auto')
+    //   .attr('markerUnits', 'strokeWidth')
+    //   .append('path')
+    //   .attr('d', `M0,0 L0,${arrowScale} L${arrowScale},${arrowScale / 2} z`)
+    //   .attr('fill', 'black');
 
     const lineData = svg.selectAll('link').data(links);
 
@@ -151,17 +153,17 @@ export class AppComponent {
           return i === l.target;
         })[0];
 
-        const nodeDistance = targetNode.y - sourceNode.y;
+        const nodeDistance = sourceNode.x - targetNode.x;
 
         return `M ${sourceNode.x} ${sourceNode.y}
-                C ${sourceNode.x + nodeDistance * 0.4} ${sourceNode.y + 20}
-                  ${targetNode.x + nodeDistance * 0.4} ${targetNode.y - 20}
+                C ${sourceNode.x} ${sourceNode.y + nodeDistance * 0.4}
+                  ${targetNode.x} ${targetNode.y + nodeDistance * 0.4}
                   ${targetNode.x} ${targetNode.y}`;
       })
       .attr('fill', 'none')
       .attr('stroke', 'black')
-      .attr('stroke-width', lineWidth.toString())
-      .attr('marker-end', 'url(#arrow)');
+      .attr('stroke-width', lineWidth.toString());
+    // .attr('marker-end', 'url(#arrow)');
 
     // Create line labels
     const svgLineLabels = lineGroup
@@ -174,21 +176,7 @@ export class AppComponent {
         // If the flow is in the opposite direction,
         // then shift the line label to avoid overlap
         const { sourceNode, targetNode, y } = this.labelY(nodes, l, lineWidth);
-        if (sourceNode.x < targetNode.x) {
-          return y;
-        } else {
-          let labelShift: number = 0;
-          // Find link from the opposite direction if it exists
-          const oppositeLink: SvgLink = links.filter(link => {
-            return link.source === l.target && link.target === l.source;
-          })[0];
-          if (oppositeLink) {
-            oppositeLink.names.forEach(name => {
-              labelShift += fontSize;
-            });
-          }
-          return (targetNode.y - sourceNode.y) / 2 + sourceNode.y + labelShift;
-        }
+        return y;
       })
       .attr('font-size', fontSize.toString())
       .attr('fill', 'orange')
@@ -251,8 +239,8 @@ export class AppComponent {
     margin: number,
     circleDistance: number
   ): { linkEndsTuples: linkTuple[]; x: number; y: number } {
-    let x: number = margin * 25;
-    let y: number = margin;
+    let x: number = margin;
+    let y: number = margin * 25;
     let svgNode: SvgNode;
     let currentNodeId: number;
     let targetNodeId: number;
@@ -299,7 +287,7 @@ export class AppComponent {
           // Shift y coordinate if it has not been shifted for the current step yet
 
           if (!nodeFound) {
-            y += circleDistance;
+            x += circleDistance;
             // if (!stepShifted) {
             //   y += circleDistance;
             //   stepShifted = true;
@@ -336,7 +324,7 @@ export class AppComponent {
       }
     });
 
-    x *= 2;
+    y *= 2;
 
     return { linkEndsTuples, x, y };
   }
@@ -399,7 +387,7 @@ export class AppComponent {
 
     // Initialize lengths and sizes
     const radius: number = 40; // The only parameter specified by the user
-    const margin: number = radius;
+    const margin: number = radius * 1.6;
     const fontSize: number = radius / 2.7;
     const circleDistance: number = radius * 5.5;
 
