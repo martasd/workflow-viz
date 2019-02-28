@@ -26,6 +26,18 @@ export class AppComponent {
   xmlLong: string;
   xmlFnb: string;
 
+  afuConfig = {
+    multiple: false,
+    formatsAllowed: '.xml',
+    maxSize: '5',
+    uploadAPI: {
+      url: 'http://localhost:3000/files'
+    },
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
   private initTestData(): void {
     this.title = 'workflow-viz';
     this.xmlSimple = xmlSimple;

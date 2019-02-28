@@ -32,4 +32,4 @@
 
 # TODO
 
-- Refactor
+- Upload a file through the browser
