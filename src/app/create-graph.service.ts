@@ -18,8 +18,6 @@ export class CreateGraphService {
     margin: number,
     circleDistance: number
   ): [SvgNode[], Array<[string[], number, number]>, number, number] {
-    let x: number = margin;
-    let y: number = margin * 10;
     let svgNode: SvgNode;
     let currentNodeId: number;
     let targetNodeId: number;
@@ -27,7 +25,6 @@ export class CreateGraphService {
     let currentLinkEnds: linkTuple = null;
     let linkFound: linkTuple;
     let nodeFound: SvgNode;
-    let stepShifted: boolean = false;
     const linkEndsTuples: linkTuple[] = [];
 
     traverse(obj).map(elem => {
@@ -36,7 +33,7 @@ export class CreateGraphService {
         case 'initial-actions': {
           // Initial node will have id 0
           currentNodeId = 0;
-          svgNode = new SvgNode('Initial', currentNodeId, x, y);
+          svgNode = new SvgNode('Initial', currentNodeId, null, null);
           this.nodes.push(svgNode);
           break;
         }
@@ -47,7 +44,6 @@ export class CreateGraphService {
             return node.id === currentNodeId;
           });
           nodeFound.name = elem.attributes.name;
-          stepShifted = false;
 
           break;
         }
@@ -58,18 +54,21 @@ export class CreateGraphService {
         case 'unconditional-result': {
           targetNodeId = parseInt(elem.attributes.step, 10);
 
+          // If we create the final step, assign it largest possible id
+          if (targetNodeId === -1) {
+            targetNodeId = Number.MAX_SAFE_INTEGER;
+          }
+
           // Create a new node if it does not exist yet
           nodeFound = this.nodes.find(node => {
             return node.id === targetNodeId;
           });
 
           if (!nodeFound) {
-            x += circleDistance;
-
             svgNode =
-              targetNodeId === -1
-                ? new SvgNode('Final', targetNodeId, x, y)
-                : new SvgNode('', targetNodeId, x, y);
+              targetNodeId === Number.MAX_SAFE_INTEGER
+                ? new SvgNode('Final', targetNodeId, null, null)
+                : new SvgNode('', targetNodeId, null, null);
 
             this.nodes.push(svgNode);
           }
@@ -95,7 +94,31 @@ export class CreateGraphService {
       }
     });
 
-    return [this.nodes, linkEndsTuples, x, y * 2];
+    // Sort nodes based on their step id
+    this.nodes.sort((node1, node2) => {
+      if (node1.id < node2.id) {
+        return -1;
+      }
+      if (node1.id > node2.id) {
+        return 1;
+      }
+      return 0;
+    });
+
+    // Set the nodes' x and y coordinates
+    const length = this.nodes.length - 1; // starting from 0
+    const graphHeight = margin * length;
+    this.nodes.forEach((node, index) => {
+      node.x = margin + index * circleDistance;
+      node.y = graphHeight;
+    });
+
+    return [
+      this.nodes,
+      linkEndsTuples,
+      margin + length * circleDistance,
+      graphHeight * 2
+    ];
   }
 
   createSvgLinks(linkEndsTuples: linkTuple[]): SvgLink[] {
