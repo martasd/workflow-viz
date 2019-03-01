@@ -4,7 +4,7 @@ import { CreateGraphService } from './create-graph.service';
 import { CreateSvgService } from './create-svg.service';
 import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
-import { xmlFnb, xmlLong, xmlSimple } from './workflows';
+import { xmlFirnza, xmlFnb, xmlLong, xmlSimple } from './workflows';
 
 type linkTuple = [string[], number, number];
 
@@ -22,9 +22,6 @@ const _ = deepdash(lodash);
 })
 export class AppComponent {
   title: string;
-  xmlSimple: string;
-  xmlLong: string;
-  xmlFnb: string;
 
   afuConfig = {
     multiple: false,
@@ -40,9 +37,6 @@ export class AppComponent {
 
   private initTestData(): void {
     this.title = 'workflow-viz';
-    this.xmlSimple = xmlSimple;
-    this.xmlLong = xmlLong;
-    this.xmlFnb = xmlFnb;
   }
 
   private removeGlobalActions(jsWorkflow: Element | ElementCompact): void {
@@ -70,7 +64,7 @@ export class AppComponent {
     this.initTestData();
 
     const jsWorkflow: Element | ElementCompact = parseWorkflowService.toJs(
-      this.xmlFnb
+      xmlFirnza
     );
     this.removeGlobalActions(jsWorkflow);
 
