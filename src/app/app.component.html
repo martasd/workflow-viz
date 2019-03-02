@@ -2,6 +2,9 @@
 <div style="text-align:center">
   <h1>Welcome to {{ title }}!</h1>
 </div>
-<angular-file-uploader [config]="afuConfig"> </angular-file-uploader>
-
+<input type="file" (change)="onChange($event.target.files)" />
+<!-- <div>
+  <h3>File Content</h3>
+  <pre> {{ xmlContent }} </pre>
+</div> -->
 <router-outlet></router-outlet>

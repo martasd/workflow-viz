@@ -29,7 +29,8 @@
 - Adjust labels for links in opposite directions
 - Adjust the y coordinate of link labels
 - Removed bootstrap
+- - Upload a file through the browser
 
 # TODO
 
-- Upload a file through the browser
+- Create API with express server

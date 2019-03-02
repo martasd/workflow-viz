@@ -22,18 +22,7 @@ const _ = deepdash(lodash);
 })
 export class AppComponent {
   title: string;
-
-  afuConfig = {
-    multiple: false,
-    formatsAllowed: '.xml',
-    maxSize: '5',
-    uploadAPI: {
-      url: 'http://localhost:3000/files'
-    },
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
+  xmlContent: string;
 
   private initTestData(): void {
     this.title = 'workflow-viz';
@@ -50,11 +39,17 @@ export class AppComponent {
     );
   }
 
-  constructor(
-    private parseWorkflowService: ParseWorkflowService,
-    private createGraphService: CreateGraphService,
-    private createSvgService: CreateSvgService
-  ) {
+  // Read the uploaded file
+  public onChange(fileList: FileList): void {
+    const file = fileList[0];
+    const fileReader: FileReader = new FileReader();
+    const self = this;
+    fileReader.onloadend = event => {
+      self.xmlContent = fileReader.result.toString();
+    };
+
+    fileReader.readAsText(file);
+
     // Initialize lengths and sizes
     const radius: number = 40; // The only parameter specified by the user
     const margin: number = radius * 1.6;
@@ -63,8 +58,8 @@ export class AppComponent {
 
     this.initTestData();
 
-    const jsWorkflow: Element | ElementCompact = parseWorkflowService.toJs(
-      xmlFirnza
+    const jsWorkflow: Element | ElementCompact = this.parseWorkflowService.toJs(
+      this.xmlContent
     );
     this.removeGlobalActions(jsWorkflow);
 
@@ -73,14 +68,22 @@ export class AppComponent {
     let y: number;
     let nodes: SvgNode[];
     let linkEndsTuples: linkTuple[];
-    [nodes, linkEndsTuples, x, y] = createGraphService.createSvgNodes(
+    [nodes, linkEndsTuples, x, y] = this.createGraphService.createSvgNodes(
       jsWorkflow,
       margin,
       circleDistance
     );
-    const links: SvgLink[] = createGraphService.createSvgLinks(linkEndsTuples);
+    const links: SvgLink[] = this.createGraphService.createSvgLinks(
+      linkEndsTuples
+    );
 
     const canvasSize = { width: x + margin, height: y + margin };
-    createSvgService.createSvg(nodes, links, canvasSize, radius, fontSize);
+    this.createSvgService.createSvg(nodes, links, canvasSize, radius, fontSize);
   }
+
+  constructor(
+    private parseWorkflowService: ParseWorkflowService,
+    private createGraphService: CreateGraphService,
+    private createSvgService: CreateSvgService
+  ) {}
 }
