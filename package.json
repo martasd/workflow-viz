@@ -22,7 +22,6 @@
     "@angular/platform-browser-dynamic": "~7.2.7",
     "@angular/router": "~7.2.7",
     "@types/lodash": "^4.14.121",
-    "angular-file-uploader": "^5.0.2",
     "core-js": "^2.6.5",
     "d3": "^5.9.1",
     "deepdash": "^2.0.2",
