@@ -162,6 +162,8 @@ export class CreateSvgService {
     // Create SVG container
     const svg = d3
       .select('body')
+      .append('div')
+      .attr('style', 'text-align:center;')
       .append('svg')
       .attr('width', canvasSize.width.toString())
       .attr('height', canvasSize.height.toString());
