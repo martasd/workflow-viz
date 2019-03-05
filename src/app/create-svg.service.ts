@@ -157,12 +157,13 @@ export class CreateSvgService {
     fontSize: number
   ): void {
     // Remove existing svg
-    d3.select('svg').remove();
+    d3.select('.graph').remove();
 
     // Create SVG container
     const svg = d3
       .select('body')
       .append('div')
+      .attr('class', 'graph')
       .attr('style', 'text-align:center;')
       .append('svg')
       .attr('width', canvasSize.width.toString())
