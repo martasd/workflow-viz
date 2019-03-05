@@ -13,6 +13,12 @@ export class CreateGraphService {
 
   constructor() {}
 
+  // Reset data (after creating SVG)
+  clean() {
+    this.links = [];
+    this.nodes = [];
+  }
+
   createSvgNodes(
     obj: object,
     margin: number,
@@ -122,7 +128,6 @@ export class CreateGraphService {
   }
 
   createSvgLinks(linkEndsTuples: linkTuple[]): SvgLink[] {
-    // Create the links
     let svgLink: SvgLink;
     let names: string[];
     let source: number;

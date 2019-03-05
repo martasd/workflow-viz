@@ -55,13 +55,14 @@ export class AppComponent {
       let x: number;
       let y: number;
       let nodes: SvgNode[];
+      let links: SvgLink[];
       let linkEndsTuples: linkTuple[];
       [nodes, linkEndsTuples, x, y] = this.createGraphService.createSvgNodes(
         jsWorkflow,
         margin,
         circleDistance
       );
-      const links: SvgLink[] = this.createGraphService.createSvgLinks(
+      links = this.createGraphService.createSvgLinks(
         linkEndsTuples
       );
 
@@ -73,6 +74,8 @@ export class AppComponent {
         radius,
         fontSize
       );
+
+      this.createGraphService.clean();
     };
 
     fileReader.readAsText(file);

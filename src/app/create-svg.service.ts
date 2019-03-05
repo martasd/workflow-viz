@@ -156,6 +156,9 @@ export class CreateSvgService {
     radius: number,
     fontSize: number
   ): void {
+    // Remove existing svg
+    d3.select('svg').remove();
+
     // Create SVG container
     const svg = d3
       .select('body')
