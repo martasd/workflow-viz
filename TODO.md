@@ -33,3 +33,5 @@
 - Dynamically show the visualization
 
 # TODO
+
+- Remove previous svg when adding a new one
