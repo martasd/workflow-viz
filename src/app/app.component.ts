@@ -40,10 +40,10 @@ export class AppComponent {
 
     fileReader.onloadend = event => {
       // Initialize lengths and sizes
-      const radius: number = 40; // The only parameter specified by the user
+      const radius: number = 30; // The only parameter specified by the user
       const margin: number = radius * 1.6;
       const fontSize: number = radius / 2.7;
-      const circleDistance: number = radius * 5.5;
+      const circleDistance: number = radius * 4.5;
       const xmlString = fileReader.result.toString();
 
       const jsWorkflow:
@@ -62,9 +62,7 @@ export class AppComponent {
         margin,
         circleDistance
       );
-      links = this.createGraphService.createSvgLinks(
-        linkEndsTuples
-      );
+      links = this.createGraphService.createSvgLinks(linkEndsTuples);
 
       const canvasSize = { width: x + margin, height: y + margin };
       this.createSvgService.createSvg(
