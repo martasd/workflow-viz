@@ -93,11 +93,10 @@ export class CreateSvgService {
   ): void {
     const lineData = svg.selectAll('link').data(links);
 
-    const lineGroup = lineData.enter().append('g');
-
     // Create lines
     const lineWidth: number = 2;
-    lineGroup
+    lineData
+      .enter()
       .append('path')
       .attr('d', (l: SvgLink) => {
         const sourceNode = nodes.filter((d, i) => {
@@ -119,7 +118,8 @@ export class CreateSvgService {
       .attr('stroke-width', lineWidth.toString());
 
     // Create line labels
-    lineGroup
+    lineData
+      .enter()
       .append('text')
       .attr('class', 'label')
       .attr('x', (l: SvgLink) => {
