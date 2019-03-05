@@ -28,6 +28,7 @@ export class CreateGraphService {
     let currentNodeId: number;
     let targetNodeId: number;
     let actionName: string;
+    let nodeName: string;
     let currentLinkEnds: linkTuple = null;
     let linkFound: linkTuple;
     let nodeFound: SvgNode;
@@ -49,8 +50,14 @@ export class CreateGraphService {
           nodeFound = this.nodes.find(node => {
             return node.id === currentNodeId;
           });
-          nodeFound.name = elem.attributes.name;
 
+          nodeName = elem.attributes.name;
+          if (!nodeFound) {
+            svgNode = new SvgNode(nodeName, currentNodeId, null, null);
+            this.nodes.push(svgNode);
+          } else {
+            nodeFound.name = nodeName;
+          }
           break;
         }
         case 'action': {
