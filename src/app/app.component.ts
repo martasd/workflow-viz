@@ -33,7 +33,7 @@ export class AppComponent {
     );
   }
 
-  // Read the uploaded file
+  // Read the file uploaded by the user
   public async onChange(fileList: FileList) {
     const file = fileList[0];
     const fileReader: FileReader = new FileReader();
@@ -46,23 +46,23 @@ export class AppComponent {
       const circleDistance: number = radius * 4.5;
       const xmlString = fileReader.result.toString();
 
-      const jsWorkflow:
+      const workflowObj:
         | Element
         | ElementCompact = this.parseWorkflowService.toJs(xmlString);
-      this.removeGlobalActions(jsWorkflow);
+      this.removeGlobalActions(workflowObj);
 
-      // Create nodes and links from XML JS object
+      // Create nodes and links from the workflow js object
       let x: number;
       let y: number;
       let nodes: SvgNode[];
       let links: SvgLink[];
       let linkEndsTuples: linkTuple[];
-      [nodes, linkEndsTuples, x, y] = this.createGraphService.createSvgNodes(
-        jsWorkflow,
+      [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
+        workflowObj,
         margin,
         circleDistance
       );
-      links = this.createGraphService.createSvgLinks(linkEndsTuples);
+      links = this.createGraphService.createLinks(linkEndsTuples);
 
       const canvasSize = { width: x + margin, height: y + margin };
       this.createSvgService.createSvg(

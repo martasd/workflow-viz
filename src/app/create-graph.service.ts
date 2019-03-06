@@ -19,7 +19,7 @@ export class CreateGraphService {
     this.nodes = [];
   }
 
-  createSvgNodes(
+  createNodes(
     obj: object,
     margin: number,
     circleDistance: number
@@ -134,7 +134,7 @@ export class CreateGraphService {
     ];
   }
 
-  createSvgLinks(linkEndsTuples: linkTuple[]): SvgLink[] {
+  createLinks(linkEndsTuples: linkTuple[]): SvgLink[] {
     let svgLink: SvgLink;
     let names: string[];
     let source: number;
