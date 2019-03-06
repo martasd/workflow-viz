@@ -148,7 +148,6 @@ export class CreateSvgService {
         }
       });
   }
-
   createSvg(
     nodes: SvgNode[],
     links: SvgLink[],
@@ -164,10 +163,11 @@ export class CreateSvgService {
       .select('body')
       .append('div')
       .attr('class', 'graph')
-      .attr('style', 'text-align:center;')
       .append('svg')
-      .attr('width', canvasSize.width.toString())
-      .attr('height', canvasSize.height.toString());
+      .attr(
+        'viewBox',
+        `0 0 ${canvasSize.width.toString()} ${canvasSize.height.toString()}`
+      );
 
     this.createSvgLines(svg, nodes, links, fontSize, radius);
 
