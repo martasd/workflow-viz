@@ -20,7 +20,7 @@ export class CreateGraphService {
   }
 
   createNodes(
-    obj: object,
+    workflowObj: object,
     margin: number,
     circleDistance: number
   ): [SvgNode[], Array<[string[], number, number]>, number, number] {
@@ -34,7 +34,7 @@ export class CreateGraphService {
     let nodeFound: SvgNode;
     const linkEndsTuples: linkTuple[] = [];
 
-    traverse(obj).map(elem => {
+    traverse(workflowObj).map(elem => {
       // Create nodes for steps, actions and result xml elements
       switch (elem.name) {
         case 'initial-actions': {

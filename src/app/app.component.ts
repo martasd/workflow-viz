@@ -66,6 +66,7 @@ export class AppComponent {
 
       const canvasSize = { width: x + margin, height: y + margin };
       this.createSvgService.createSvg(
+        workflowObj,
         nodes,
         links,
         canvasSize,

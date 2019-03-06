@@ -32,7 +32,8 @@
 - Upload a file through the browser
 - Dynamically show the visualization
 - Remove previous svg when adding a new one
+- Show a popup with step attributes
 
 # TODO
 
-- Show a popup with step attributes
+- Remove the popup on the next click

@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import * as d3 from 'd3';
 import { SvgLink, SvgNode } from './d3/models';
 
+declare var traverse: any;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -149,6 +151,7 @@ export class CreateSvgService {
       });
   }
   createSvg(
+    workflowObj: object,
     nodes: SvgNode[],
     links: SvgLink[],
     canvasSize: { width: number; height: number },
@@ -162,6 +165,7 @@ export class CreateSvgService {
     const svg = d3
       .select('body')
       .append('div')
+      .attr('contenteditable', '')
       .attr('class', 'graph')
       .append('svg')
       .attr(
@@ -172,5 +176,69 @@ export class CreateSvgService {
     this.createSvgLines(svg, nodes, links, fontSize, radius);
 
     this.createSvgCircles(svg, nodes, radius, fontSize);
+
+    svg.node().addEventListener('click', event => {
+      const popupElem = d3.select('.popup');
+      console.log(popupElem);
+      // retrieve the step name
+      const stepName: string = event.srcElement.nextSibling.textContent;
+
+      const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
+      const cx: number = event.srcElement.cx.animVal.value + fontSize;
+      const cy: number = event.srcElement.cy.animVal.value + fontSize;
+      const x: number = cx + fontSize;
+      let y: number = cy + fontSize;
+      let elemInfo: string;
+
+      // find the step in the source xml
+      traverse(workflowObj).forEach(element => {
+        if (element.name === 'step') {
+          // && elem.attributes.name === stepName) {
+
+          const popup: d3.Selection<
+            SVGGElement,
+            {},
+            HTMLElement,
+            any
+          > = svg.append('g').attr('class', 'popup');
+
+          popup
+            .append('rect')
+            .attr('x', cx)
+            .attr('y', cy)
+            .attr('rx', 15)
+            .attr('ry', 15)
+            .attr('width', 100)
+            .attr('height', 40)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('fill', (d, i) => {
+              return color(i.toString());
+            });
+
+          // retrieve the step attributes
+          element.elements.forEach(elem => {
+            console.log(elem);
+            if (elem.name === 'meta') {
+              elemInfo = elem.attributes.name;
+            } else if (elem.name === 'actions') {
+              elemInfo = elem.name;
+            } else {
+              elemInfo = '';
+            }
+            popup
+              .append('text')
+              .attr('x', x)
+              .attr('y', y)
+              .attr('font-size', (fontSize * 0.7).toString())
+              .attr('text-anchor', 'start')
+              .text(elemInfo);
+            y += fontSize;
+          });
+          const popupElem2 = d3.select('.popup');
+          console.log(popupElem2);
+        }
+      });
+    });
   }
 }
