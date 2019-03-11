@@ -187,8 +187,9 @@ export class CreateSvgService {
         if (popupElem.node() !== null) {
           popupElem.remove();
         } else {
-          const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
+          // const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
           const ellipse: any = event.srcElement;
+          const color: any = ellipse.getAttribute('fill');
           const cx: number = ellipse.cx.animVal.value + fontSize;
           const cy: number = ellipse.cy.animVal.value + fontSize;
           const x: number = cx + fontSize;
@@ -220,9 +221,7 @@ export class CreateSvgService {
                 .attr('width', 100)
                 .attr('stroke', 'black')
                 .attr('stroke-width', 1)
-                .attr('fill', (d, i) => {
-                  return color(i.toString());
-                });
+                .attr('fill', color);
 
               // retrieve the step attributes
               element.elements.forEach(elem => {
