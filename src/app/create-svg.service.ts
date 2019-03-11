@@ -179,66 +179,71 @@ export class CreateSvgService {
 
     svg.node().addEventListener('click', event => {
       const popupElem = d3.select('.popup');
-      console.log(popupElem);
+
       // retrieve the step name
       const stepName: string = event.srcElement.nextSibling.textContent;
+      if (stepName !== 'Initial' && stepName !== 'Final') {
+        // toggle the popup if it is currently shown
+        // otherwise, create and show the popup
+        if (popupElem.node() !== null) {
+          popupElem.remove();
+        } else {
+          const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
+          const cx: number = event.srcElement.cx.animVal.value + fontSize;
+          const cy: number = event.srcElement.cy.animVal.value + fontSize;
+          const x: number = cx + fontSize;
+          let y: number = cy + fontSize;
+          let elemInfo: string;
 
-      const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
-      const cx: number = event.srcElement.cx.animVal.value + fontSize;
-      const cy: number = event.srcElement.cy.animVal.value + fontSize;
-      const x: number = cx + fontSize;
-      let y: number = cy + fontSize;
-      let elemInfo: string;
+          // find the step in the source xml
+          traverse(workflowObj).forEach(element => {
+            if (element.name === 'step') {
+              // && elem.attributes.name === stepName) {
 
-      // find the step in the source xml
-      traverse(workflowObj).forEach(element => {
-        if (element.name === 'step') {
-          // && elem.attributes.name === stepName) {
+              const popup: d3.Selection<
+                SVGGElement,
+                {},
+                HTMLElement,
+                any
+              > = svg.append('g').attr('class', 'popup');
 
-          const popup: d3.Selection<
-            SVGGElement,
-            {},
-            HTMLElement,
-            any
-          > = svg.append('g').attr('class', 'popup');
+              popup
+                .append('rect')
+                .attr('x', cx)
+                .attr('y', cy)
+                .attr('rx', 15)
+                .attr('ry', 15)
+                .attr('width', 100)
+                .attr('height', 40)
+                .attr('stroke', 'black')
+                .attr('stroke-width', 1)
+                .attr('fill', (d, i) => {
+                  return color(i.toString());
+                });
 
-          popup
-            .append('rect')
-            .attr('x', cx)
-            .attr('y', cy)
-            .attr('rx', 15)
-            .attr('ry', 15)
-            .attr('width', 100)
-            .attr('height', 40)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 1)
-            .attr('fill', (d, i) => {
-              return color(i.toString());
-            });
-
-          // retrieve the step attributes
-          element.elements.forEach(elem => {
-            console.log(elem);
-            if (elem.name === 'meta') {
-              elemInfo = elem.attributes.name;
-            } else if (elem.name === 'actions') {
-              elemInfo = elem.name;
-            } else {
-              elemInfo = '';
+              // retrieve the step attributes
+              element.elements.forEach(elem => {
+                console.log(elem);
+                if (elem.name === 'meta') {
+                  elemInfo = elem.attributes.name;
+                } else {
+                  elemInfo = '';
+                }
+                popup
+                  .append('text')
+                  .attr('x', x)
+                  .attr('y', y)
+                  .attr('font-size', (fontSize * 0.7).toString())
+                  .attr('text-anchor', 'start')
+                  .text(elemInfo);
+                y += fontSize;
+              });
+              const popupElem2 = d3.select('.popup');
+              console.log(popupElem2);
             }
-            popup
-              .append('text')
-              .attr('x', x)
-              .attr('y', y)
-              .attr('font-size', (fontSize * 0.7).toString())
-              .attr('text-anchor', 'start')
-              .text(elemInfo);
-            y += fontSize;
           });
-          const popupElem2 = d3.select('.popup');
-          console.log(popupElem2);
         }
-      });
+      }
     });
   }
 }
