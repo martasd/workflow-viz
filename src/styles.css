@@ -10,3 +10,7 @@ svg {
 .label {
   font-weight: bold;
 }
+
+.node {
+  cursor: pointer;
+}

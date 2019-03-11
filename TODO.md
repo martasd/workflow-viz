@@ -34,6 +34,7 @@
 - Remove previous svg when adding a new one
 - Show a popup with step attributes
 - Remove the popup on the next click
+- Change mouse cursor on hover.
 
 # TODO
 
