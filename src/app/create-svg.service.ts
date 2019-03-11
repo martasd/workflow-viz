@@ -165,7 +165,6 @@ export class CreateSvgService {
     const svg = d3
       .select('body')
       .append('div')
-      .attr('contenteditable', '')
       .attr('class', 'graph')
       .append('svg')
       .attr(
