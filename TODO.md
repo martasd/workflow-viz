@@ -36,3 +36,5 @@
 - Remove the popup on the next click
 
 # TODO
+
+- Validate the inserted xml

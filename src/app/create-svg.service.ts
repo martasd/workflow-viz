@@ -189,17 +189,21 @@ export class CreateSvgService {
           popupElem.remove();
         } else {
           const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
-          const cx: number = event.srcElement.cx.animVal.value + fontSize;
-          const cy: number = event.srcElement.cy.animVal.value + fontSize;
+          const ellipse: any = event.srcElement;
+          const cx: number = ellipse.cx.animVal.value + fontSize;
+          const cy: number = ellipse.cy.animVal.value + fontSize;
           const x: number = cx + fontSize;
           let y: number = cy + fontSize;
+          let height: number = 0;
+          let width: number = 0;
           let elemInfo: string;
 
           // find the step in the source xml
           traverse(workflowObj).forEach(element => {
-            if (element.name === 'step') {
-              // && elem.attributes.name === stepName) {
-
+            if (
+              element.name === 'step' &&
+              element.attributes.name === stepName
+            ) {
               const popup: d3.Selection<
                 SVGGElement,
                 {},
@@ -207,14 +211,14 @@ export class CreateSvgService {
                 any
               > = svg.append('g').attr('class', 'popup');
 
-              popup
+              const rectangle = popup
                 .append('rect')
                 .attr('x', cx)
                 .attr('y', cy)
                 .attr('rx', 15)
                 .attr('ry', 15)
-                .attr('width', 100)
                 .attr('height', 40)
+                .attr('width', 100)
                 .attr('stroke', 'black')
                 .attr('stroke-width', 1)
                 .attr('fill', (d, i) => {
@@ -225,7 +229,15 @@ export class CreateSvgService {
               element.elements.forEach(elem => {
                 console.log(elem);
                 if (elem.name === 'meta') {
-                  elemInfo = elem.attributes.name;
+                  elemInfo = ` ${elem.attributes.name}: ${
+                    elem.elements[0].text
+                  }`;
+                  // calculate dimensions of the popup
+                  const elemInfoLen: number = elemInfo.length * 3.8;
+                  if (elemInfoLen > width) {
+                    width = elemInfoLen;
+                  }
+                  height += 20;
                 } else {
                   elemInfo = '';
                 }
@@ -238,6 +250,8 @@ export class CreateSvgService {
                   .text(elemInfo);
                 y += fontSize;
               });
+              rectangle.attr('height', height);
+              rectangle.attr('width', width);
               const popupElem2 = d3.select('.popup');
               console.log(popupElem2);
             }
