@@ -35,9 +35,9 @@
 - Show a popup with step attributes
 - Remove the popup on the next click
 - Change mouse cursor on hover.
+- Make it prettier with bootstrap
 
 # TODO
 
-- Make it prettier with bootstrap
 - Add action properties
 - Validate the inserted xml

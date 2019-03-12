@@ -190,7 +190,7 @@ export class CreateSvgService {
           // const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
           const ellipse: any = event.srcElement;
           const color: any = ellipse.getAttribute('fill');
-          const cx: number = Number(ellipse.getAttribute('cx')) + fontSize;
+          const cx: number = Number(ellipse.getAttribute('cx'));
           const cy: number = Number(ellipse.getAttribute('cy')) + fontSize;
           const x: number = cx + fontSize;
           let y: number = cy + fontSize;
