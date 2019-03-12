@@ -8,7 +8,7 @@ declare var traverse: any;
   providedIn: 'root'
 })
 export class CreateSvgService {
-  constructor() { }
+  constructor() {}
 
   createSvgCircles(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
@@ -177,7 +177,6 @@ export class CreateSvgService {
     this.createSvgCircles(svg, nodes, radius, fontSize);
 
     svg.node().addEventListener('click', event => {
-
       const popupElem = d3.select('.popup');
 
       // retrieve the step name
@@ -210,7 +209,7 @@ export class CreateSvgService {
                 {},
                 HTMLElement,
                 any
-                > = svg.append('g').attr('class', 'popup');
+              > = svg.append('g').attr('class', 'popup');
 
               const rectangle = popup
                 .append('rect')
@@ -230,9 +229,9 @@ export class CreateSvgService {
                 if (elem.name === 'meta') {
                   elemInfo = ` ${elem.attributes.name}: ${
                     elem.elements[0].text
-                    }`;
+                  }`;
                   // calculate dimensions of the popup
-                  const elemInfoLen: number = elemInfo.length * 3.8;
+                  const elemInfoLen: number = elemInfo.length * 5;
                   if (elemInfoLen > width) {
                     width = elemInfoLen;
                   }
@@ -244,7 +243,7 @@ export class CreateSvgService {
                   .append('text')
                   .attr('x', x)
                   .attr('y', y)
-                  .attr('font-size', (fontSize * 0.7).toString())
+                  .attr('font-size', (fontSize * 0.9).toString())
                   .attr('text-anchor', 'start')
                   .text(elemInfo);
                 y += fontSize;

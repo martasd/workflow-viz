@@ -38,6 +38,6 @@
 
 # TODO
 
-- Make it prettier
+- Make it prettier with bootstrap
 - Add action properties
 - Validate the inserted xml
