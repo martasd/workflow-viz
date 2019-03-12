@@ -1,6 +1,21 @@
 <!-- The content below is only a placeholder and can be replaced. -->
 <div>
-  <h1>Welcome to {{ title }}!</h1>
+  <h1>{{ title }}</h1>
 </div>
-<input type="file" (change)="onChange($event.target.files)" />
+<!-- source: https://getbootstrap.com/docs/4.0/components/input-group/ -->
+<div class="input-group mb-3 w-25">
+  <div class="custom-file">
+    <input
+      type="file"
+      class="custom-file-input"
+      id="inputGroupFile01"
+      (change)="onChange($event.target.files)"
+    />
+    <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+  </div>
+
+  <!-- <div class="input-group-append">
+    <button class="btn btn-outline-secondary" type="button">Browse</button>
+  </div> -->
+</div>
 <router-outlet></router-outlet>

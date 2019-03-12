@@ -38,4 +38,6 @@
 
 # TODO
 
+- Make it prettier
+- Add action properties
 - Validate the inserted xml

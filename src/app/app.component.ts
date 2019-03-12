@@ -42,7 +42,7 @@ export class AppComponent {
       // Initialize lengths and sizes
       const radius: number = 30; // The only parameter specified by the user
       const margin: number = radius * 1.6;
-      const fontSize: number = radius / 2.7;
+      const fontSize: number = radius / 2.9;
       const circleDistance: number = radius * 4.5;
       const xmlString = fileReader.result.toString();
 

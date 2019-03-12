@@ -8,7 +8,7 @@ declare var traverse: any;
   providedIn: 'root'
 })
 export class CreateSvgService {
-  constructor() {}
+  constructor() { }
 
   createSvgCircles(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
@@ -177,6 +177,7 @@ export class CreateSvgService {
     this.createSvgCircles(svg, nodes, radius, fontSize);
 
     svg.node().addEventListener('click', event => {
+
       const popupElem = d3.select('.popup');
 
       // retrieve the step name
@@ -190,8 +191,8 @@ export class CreateSvgService {
           // const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
           const ellipse: any = event.srcElement;
           const color: any = ellipse.getAttribute('fill');
-          const cx: number = ellipse.cx.animVal.value + fontSize;
-          const cy: number = ellipse.cy.animVal.value + fontSize;
+          const cx: number = Number(ellipse.getAttribute('cx')) + fontSize;
+          const cy: number = Number(ellipse.getAttribute('cy')) + fontSize;
           const x: number = cx + fontSize;
           let y: number = cy + fontSize;
           let height: number = 0;
@@ -209,7 +210,7 @@ export class CreateSvgService {
                 {},
                 HTMLElement,
                 any
-              > = svg.append('g').attr('class', 'popup');
+                > = svg.append('g').attr('class', 'popup');
 
               const rectangle = popup
                 .append('rect')
@@ -229,7 +230,7 @@ export class CreateSvgService {
                 if (elem.name === 'meta') {
                   elemInfo = ` ${elem.attributes.name}: ${
                     elem.elements[0].text
-                  }`;
+                    }`;
                   // calculate dimensions of the popup
                   const elemInfoLen: number = elemInfo.length * 3.8;
                   if (elemInfoLen > width) {
