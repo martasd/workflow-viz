@@ -40,5 +40,5 @@
 
 # TODO
 
-- Add action properties
 - Validate the inserted xml
+- Add action properties
