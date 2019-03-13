@@ -130,8 +130,8 @@ export class CreateGraphService {
     });
 
     // Set the nodes' x and y coordinates
-    const length = this.nodes.length - 1; // starting from 0
-    const graphHeight = margin * length;
+    const nodeCount = this.nodes.length - 1; // starting from 0
+    const graphHeight = nodeCount * 40;
     this.nodes.forEach((node, index) => {
       node.x = margin + index * nodeDistance;
       node.y = graphHeight;
@@ -140,7 +140,7 @@ export class CreateGraphService {
     return [
       this.nodes,
       linkEndsTuples,
-      margin + length * nodeDistance,
+      margin + nodeCount * nodeDistance,
       graphHeight * 2
     ];
   }
