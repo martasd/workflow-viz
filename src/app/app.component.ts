@@ -9,11 +9,12 @@ type linkTuple = [string[], number, number];
 
 import deepdash from 'deepdash';
 import * as lodash from 'lodash';
-const _ = deepdash(lodash);
+const deepDash = deepdash(lodash);
 
-/* Draw the nodes and links in an SVG container
-   source: https://stackoverflow.com/questions/28102089/simple-graph-of-nodes-and-links-without-using-force-layout
-*/
+/**
+ * Draw the nodes and links in an SVG container
+ * source: https://stackoverflow.com/questions/28102089/simple-graph-of-nodes-and-links-without-using-force-layout
+ */
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -22,8 +23,13 @@ const _ = deepdash(lodash);
 export class AppComponent {
   title: string;
 
+  /**
+   * Remove global actions from WFD.
+   *
+   * @param jsWorkflow workflow js object
+   */
   private removeGlobalActions(jsWorkflow: Element | ElementCompact): void {
-    _.eachDeep(
+    deepDash.eachDeep(
       jsWorkflow,
       (value, key, path, depth, parent, parentKey, parentPath) => {
         if (value === 'global-actions') {
@@ -33,38 +39,43 @@ export class AppComponent {
     );
   }
 
-  // Read the file uploaded by the user
+  /**
+   * Read the file uploaded by the user.
+   *
+   * @param fileList list of input files selected to visualize- currently, only one file is supported
+   */
   public async onChange(fileList: FileList) {
     const file = fileList[0];
     const fileReader: FileReader = new FileReader();
 
     fileReader.onloadend = event => {
-      // Initialize lengths and sizes
-      const radius: number = 30; // The only parameter specified by the user
+      const radius: number = 30; // The only parameter needed to be adjusted by the user
       const margin: number = radius * 1.6;
       const fontSize: number = radius / 2.9;
       const circleDistance: number = radius * 4.5;
-      const xmlString = fileReader.result.toString();
+      const xmlString: string = fileReader.result.toString();
 
-      const workflowObj:
-        | Element
-        | ElementCompact = this.parseWorkflowService.toJs(xmlString);
-      this.removeGlobalActions(workflowObj);
-
-      // Create nodes and links from the workflow js object
       let x: number;
       let y: number;
       let nodes: SvgNode[];
       let links: SvgLink[];
       let linkEndsTuples: linkTuple[];
+      let workflowObj: Element | ElementCompact;
+      let canvasSize: { width: number; height: number };
+
+      workflowObj = this.parseWorkflowService.toJs(xmlString);
+
+      this.removeGlobalActions(workflowObj);
+
       [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
         workflowObj,
         margin,
         circleDistance
       );
+
       links = this.createGraphService.createLinks(linkEndsTuples);
 
-      const canvasSize = { width: x + margin, height: y + margin };
+      canvasSize = { width: x + margin, height: y + margin };
       this.createSvgService.createSvg(
         workflowObj,
         nodes,

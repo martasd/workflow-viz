@@ -10,6 +10,14 @@ declare var traverse: any;
 export class CreateSvgService {
   constructor() {}
 
+  /**
+   * Create an svg entity (currently ellipse) for each node.
+   *
+   * @param svg svg selection- container
+   * @param nodes data nodes to render as svg
+   * @param radius radius of the ellipse
+   * @param fontSize text size inside the svg node
+   */
   createSvgCircles(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
     nodes: SvgNode[],
@@ -57,7 +65,13 @@ export class CreateSvgService {
       });
   }
 
-  // Calculate the X coordinate of link label
+  /**
+   * Calculate the X coordinate of link label.
+   *
+   * @param nodes array of data nodes
+   * @param link array of data links
+   * @returns x-coordinate of link label
+   */
   private labelX(nodes: SvgNode[], link: SvgLink): number {
     const sourceNode = nodes.filter((val, i) => {
       return i === link.source;
@@ -69,11 +83,16 @@ export class CreateSvgService {
     return x;
   }
 
-  // Calculate the Y coordinate of link label
+  /**
+   * Calculate the Y coordinate of link label.
+   *
+   * @param nodes array of data nodes
+   * @param link array of data links
+   * @returns source node, target node, and y-coordinate of link label
+   */
   private labelY(
     nodes: SvgNode[],
-    link: SvgLink,
-    lineWidth: number
+    link: SvgLink
   ): { sourceNode: SvgNode; targetNode: SvgNode; y: number } {
     const sourceNode = nodes.filter((val, i) => {
       return i === link.source;
@@ -86,12 +105,19 @@ export class CreateSvgService {
     return { sourceNode, targetNode, y };
   }
 
+  /**
+   * Create svg entity (line) for each link.
+   *
+   * @param svg svg container
+   * @param nodes array of data nodes
+   * @param links array of data links
+   * @param fontSize text size of line labels
+   */
   createSvgLines(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
     nodes: SvgNode[],
     links: SvgLink[],
-    fontSize: number,
-    radius: number
+    fontSize: number
   ): void {
     const lineData = svg.selectAll('link').data(links);
 
@@ -130,7 +156,7 @@ export class CreateSvgService {
       .attr('y', (l: SvgLink) => {
         // If the flow is in the opposite direction,
         // then shift the line label to avoid overlap
-        const { sourceNode, targetNode, y } = this.labelY(nodes, l, lineWidth);
+        const { sourceNode, targetNode, y } = this.labelY(nodes, l);
         return y;
       })
       .attr('font-size', fontSize.toString())
@@ -150,6 +176,16 @@ export class CreateSvgService {
         }
       });
   }
+  /**
+   * Create svg container for the graph.
+   *
+   * @param workflowObj workflow js object
+   * @param nodes graph nodes
+   * @param links graph links
+   * @param canvasSize size of the canvas used for drawing the graph
+   * @param radius radius of the svg node entity (ellipse)
+   * @param fontSize text size for all text inside the svg
+   */
   createSvg(
     workflowObj: object,
     nodes: SvgNode[],
@@ -172,7 +208,7 @@ export class CreateSvgService {
         `0 0 ${canvasSize.width.toString()} ${canvasSize.height.toString()}`
       );
 
-    this.createSvgLines(svg, nodes, links, fontSize, radius);
+    this.createSvgLines(svg, nodes, links, fontSize);
 
     this.createSvgCircles(svg, nodes, radius, fontSize);
 

@@ -22,6 +22,7 @@
     "@angular/platform-browser": "~7.2.7",
     "@angular/platform-browser-dynamic": "~7.2.7",
     "@angular/router": "~7.2.7",
+    "@compodoc/compodoc": "^1.1.9",
     "@fortawesome/fontawesome-free": "^5.7.2",
     "@types/chart.js": "^2.7.48",
     "@types/lodash": "^4.14.121",

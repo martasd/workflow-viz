@@ -36,6 +36,7 @@
 - Remove the popup on the next click
 - Change mouse cursor on hover.
 - Make it prettier with bootstrap
+- Document the code.
 
 # TODO
 

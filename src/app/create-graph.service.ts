@@ -13,16 +13,27 @@ export class CreateGraphService {
 
   constructor() {}
 
-  // Reset data (after creating SVG)
-  clean() {
+  /**
+   * Reset data (after creating SVG).
+   *
+   */
+  clean(): void {
     this.links = [];
     this.nodes = [];
   }
 
+  /**
+   * Create nodes from workflow steps.
+   *
+   * @param  workflowObj Workflow js object
+   * @param  margin Distance from the edge of the container
+   * @param  nodeDistance Distance between individual nodes
+   * @returns Nodes and links and related attributes
+   */
   createNodes(
     workflowObj: object,
     margin: number,
-    circleDistance: number
+    nodeDistance: number
   ): [SvgNode[], Array<[string[], number, number]>, number, number] {
     let svgNode: SvgNode;
     let currentNodeId: number;
@@ -122,23 +133,29 @@ export class CreateGraphService {
     const length = this.nodes.length - 1; // starting from 0
     const graphHeight = margin * length;
     this.nodes.forEach((node, index) => {
-      node.x = margin + index * circleDistance;
+      node.x = margin + index * nodeDistance;
       node.y = graphHeight;
     });
 
     return [
       this.nodes,
       linkEndsTuples,
-      margin + length * circleDistance,
+      margin + length * nodeDistance,
       graphHeight * 2
     ];
   }
 
+  /**
+   * Create links from workflow actions.
+   *
+   * @returns Array of links.
+   */
   createLinks(linkEndsTuples: linkTuple[]): SvgLink[] {
     let svgLink: SvgLink;
     let names: string[];
     let source: number;
     let target: number;
+
     linkEndsTuples.forEach(linkEnds => {
       names = linkEnds[0];
 
