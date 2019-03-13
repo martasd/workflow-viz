@@ -6,11 +6,9 @@ See [Demo](https://martasd.github.io/workflow-viz) for a live example.
 
 ## Code Documentation
 
-Documentation is generated with [Compodoc](https://compodoc.app):
+Documentation for the project can be generated with [Compodoc](https://compodoc.app):
 
     compodoc -p tsconfig.json
-
-It is available to display in the browser from the **./documentation** directory.
 
 ## Deployment
 
