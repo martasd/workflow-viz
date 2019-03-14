@@ -15,6 +15,6 @@ Documentation for the project can be generated with [Compodoc](https://compodoc.
 Deployment on Github pages does not work when the project is built in the **./dist** directory, so using **./docs** instead:
 
     ng build --prod --output-path docs --base-href "https://martasd.github.io/workflow-viz/"
-    npx angular-cli-ghpages --dir  docs'
+    npx angular-cli-ghpages --dir  docs
 
 Change `base-href` if you would like to deploy to your own Github pages.
