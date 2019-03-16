@@ -194,14 +194,11 @@ export class CreateSvgService {
     radius: number,
     fontSize: number
   ): void {
-    // Remove existing svg
-    d3.select('.graph').remove();
-
     // Create SVG container
     const svg = d3
       .select('body')
       .append('div')
-      .attr('class', 'graph')
+      .attr('class', 'dynamic-content')
       .append('svg')
       .attr(
         'viewBox',
@@ -293,5 +290,25 @@ export class CreateSvgService {
         }
       }
     });
+  }
+
+  /**
+   * Show an alert if XML from input file is not valid.
+   *
+   */
+  createAlert(): void {
+    d3.select('body')
+      .append('div')
+      .attr('class', 'alert alert-danger dynamic-content')
+      .attr('role', 'alert')
+      .text('Selected file contains invalid XML content!');
+  }
+
+  /**
+   * When selecting a new input file, remove the existing previously inserted dynamic elements.
+   *
+   */
+  removePreviousContent(): void {
+    d3.select('.dynamic-content').remove();
   }
 }

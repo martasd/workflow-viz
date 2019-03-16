@@ -37,8 +37,9 @@
 - Change mouse cursor on hover.
 - Make it prettier with bootstrap
 - Document the code.
+- Validate the inserted xml and show a warning
 
 # TODO
 
-- Validate the inserted xml
+- Validate that the uploaded file contains a workflow
 - Add action properties

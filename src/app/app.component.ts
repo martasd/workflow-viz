@@ -8,6 +8,7 @@ import { ParseWorkflowService } from './parse-workflow.service';
 type linkTuple = [string[], number, number];
 
 import deepdash from 'deepdash';
+import * as parser from 'fast-xml-parser';
 import * as lodash from 'lodash';
 const deepDash = deepdash(lodash);
 
@@ -53,7 +54,6 @@ export class AppComponent {
       const margin: number = radius * 1.6;
       const fontSize: number = radius / 2.9;
       const circleDistance: number = radius * 4.5;
-      const xmlString: string = fileReader.result.toString();
 
       let x: number;
       let y: number;
@@ -62,30 +62,39 @@ export class AppComponent {
       let linkEndsTuples: linkTuple[];
       let workflowObj: Element | ElementCompact;
       let canvasSize: { width: number; height: number };
+      let xmlString: string;
 
-      workflowObj = this.parseWorkflowService.toJs(xmlString);
+      this.createSvgService.removePreviousContent();
 
-      this.removeGlobalActions(workflowObj);
+      xmlString = fileReader.result.toString();
 
-      [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
-        workflowObj,
-        margin,
-        circleDistance
-      );
+      if (parser.validate(xmlString) !== true) {
+        this.createSvgService.createAlert();
+      } else {
+        workflowObj = this.parseWorkflowService.toJs(xmlString);
 
-      links = this.createGraphService.createLinks(linkEndsTuples);
+        this.removeGlobalActions(workflowObj);
 
-      canvasSize = { width: x + margin, height: y + margin };
-      this.createSvgService.createSvg(
-        workflowObj,
-        nodes,
-        links,
-        canvasSize,
-        radius,
-        fontSize
-      );
+        [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
+          workflowObj,
+          margin,
+          circleDistance
+        );
 
-      this.createGraphService.clean();
+        links = this.createGraphService.createLinks(linkEndsTuples);
+
+        canvasSize = { width: x + margin, height: y + margin };
+        this.createSvgService.createSvg(
+          workflowObj,
+          nodes,
+          links,
+          canvasSize,
+          radius,
+          fontSize
+        );
+
+        this.createGraphService.clean();
+      }
     };
 
     fileReader.readAsText(file);

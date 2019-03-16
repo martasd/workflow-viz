@@ -14,7 +14,7 @@ export class ParseWorkflowService {
   constructor() {}
 
   /**
-   * Converts xml string from wfd xml file to json.
+   * Converts xml string from workflow descriptor xml file to json.
    *
    * @param xml xml wfd string read from
    * @returns json string
@@ -25,7 +25,7 @@ export class ParseWorkflowService {
   }
 
   /**
-   * Converts xml string from wfd xml file to js object.
+   * Converts xml string from workflow descriptor xml file to js object.
    *
    * @param xml xml wfd string
    * @returns  js object
