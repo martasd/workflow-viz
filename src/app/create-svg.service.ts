@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { SvgLink, SvgNode } from './d3/models';
 import * as d3 from 'd3';
+import { SvgLink, SvgNode } from './d3/models';
 
 declare var traverse: any;
 
