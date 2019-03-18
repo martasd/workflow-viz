@@ -10,14 +10,34 @@ svg {
   background-color: grey;
 }
 
-.label {
-  font-weight: bold;
+path {
+  fill: none;
+  stroke: black;
 }
 
 .node {
   cursor: pointer;
 }
 
-label {
+.node-label {
+  text-anchor: middle;
+  initial-letter-align: middle;
   cursor: pointer;
+}
+
+.link-label {
+  fill: orange;
+  font-weight: bold;
+  text-anchor: middle;
+}
+
+.popup-rectangle {
+  rx: 15;
+  ry: 15;
+  stroke: black;
+  stroke-width: 1;
+}
+
+.popup-text {
+  text-anchor: start;
 }

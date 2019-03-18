@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import * as d3 from 'd3';
 import { SvgLink, SvgNode } from './d3/models';
+import * as d3 from 'd3';
 
 declare var traverse: any;
 
@@ -36,32 +36,31 @@ export class CreateSvgService {
     circleGroup
       .append('ellipse')
       .attr('class', 'node')
-      .attr('cx', (d: SvgNode) => {
-        return d.x;
+      .attr('cx', (node: SvgNode) => {
+        return node.x;
       })
-      .attr('cy', (d: SvgNode) => {
-        return d.y;
+      .attr('cy', (node: SvgNode) => {
+        return node.y;
       })
       .attr('rx', radius * 1.5)
       .attr('ry', radius)
-      .attr('fill', (d, i) => {
-        return color(i.toString());
+      .attr('fill', (node, index) => {
+        return color(index.toString());
       });
 
     // Create labels
     circleGroup
       .append('text')
-      .attr('x', (d: SvgNode) => {
-        return d.x;
+      .attr('class', 'node-label')
+      .attr('x', (node: SvgNode) => {
+        return node.x;
       })
-      .attr('y', (d: SvgNode) => {
-        return d.y;
+      .attr('y', (node: SvgNode) => {
+        return node.y;
       })
       .attr('font-size', fontSize.toString())
-      .attr('text-anchor', 'middle')
-      .attr('alignment-baseline', 'middle')
-      .text((d: SvgNode) => {
-        return d.name;
+      .text((node: SvgNode) => {
+        return node.name;
       });
   }
 
@@ -73,11 +72,11 @@ export class CreateSvgService {
    * @returns x-coordinate of link label
    */
   private labelX(nodes: SvgNode[], link: SvgLink): number {
-    const sourceNode = nodes.filter((val, i) => {
-      return i === link.source;
+    const sourceNode = nodes.filter((val, index) => {
+      return index === link.source;
     })[0];
-    const targetNode = nodes.filter((val, i) => {
-      return i === link.target;
+    const targetNode = nodes.filter((val, index) => {
+      return index === link.target;
     })[0];
     const x = (targetNode.x - sourceNode.x) / 2 + sourceNode.x;
     return x;
@@ -90,19 +89,16 @@ export class CreateSvgService {
    * @param link array of data links
    * @returns source node, target node, and y-coordinate of link label
    */
-  private labelY(
-    nodes: SvgNode[],
-    link: SvgLink
-  ): { sourceNode: SvgNode; targetNode: SvgNode; y: number } {
-    const sourceNode = nodes.filter((val, i) => {
-      return i === link.source;
+  private labelY(nodes: SvgNode[], link: SvgLink): number {
+    const sourceNode = nodes.filter((val, index) => {
+      return index === link.source;
     })[0];
-    const targetNode = nodes.filter((val, i) => {
-      return i === link.target;
+    const targetNode = nodes.filter((val, index) => {
+      return index === link.target;
     })[0];
     const nodeDistance = sourceNode.x - targetNode.x;
     const y = sourceNode.y + nodeDistance * 0.3;
-    return { sourceNode, targetNode, y };
+    return y;
   }
 
   /**
@@ -126,12 +122,12 @@ export class CreateSvgService {
     lineData
       .enter()
       .append('path')
-      .attr('d', (l: SvgLink) => {
-        const sourceNode = nodes.filter((d, i) => {
-          return i === l.source;
+      .attr('d', (link: SvgLink) => {
+        const sourceNode = nodes.filter((node, index) => {
+          return index === link.source;
         })[0];
-        const targetNode = nodes.filter((d, i) => {
-          return i === l.target;
+        const targetNode = nodes.filter((node, index) => {
+          return index === link.target;
         })[0];
 
         const nodeDistance = sourceNode.x - targetNode.x;
@@ -141,38 +137,33 @@ export class CreateSvgService {
                   ${targetNode.x} ${targetNode.y + nodeDistance * 0.4}
                   ${targetNode.x} ${targetNode.y}`;
       })
-      .attr('fill', 'none')
-      .attr('stroke', 'black')
       .attr('stroke-width', lineWidth.toString());
 
     // Create line labels
     lineData
       .enter()
       .append('text')
-      .attr('class', 'label')
-      .attr('x', (l: SvgLink) => {
-        return this.labelX(nodes, l);
+      .attr('class', 'link-label')
+      .attr('x', (link: SvgLink) => {
+        return this.labelX(nodes, link);
       })
-      .attr('y', (l: SvgLink) => {
+      .attr('y', (link: SvgLink) => {
         // If the flow is in the opposite direction,
         // then shift the line label to avoid overlap
-        const { sourceNode, targetNode, y } = this.labelY(nodes, l);
-        return y;
+        return this.labelY(nodes, link);
       })
       .attr('font-size', fontSize.toString())
-      .attr('fill', 'orange')
-      .attr('text-anchor', 'middle')
-      .text((l: SvgLink) => {
-        return l.names[0];
+      .text((link: SvgLink) => {
+        return link.names[0];
       })
       .append('tspan')
-      .attr('x', (l: SvgLink) => {
-        return this.labelX(nodes, l);
+      .attr('x', (link: SvgLink) => {
+        return this.labelX(nodes, link);
       })
       .attr('dy', fontSize.toString())
-      .text((l: SvgLink) => {
-        if (l.names[1]) {
-          return l.names[1];
+      .text((link: SvgLink) => {
+        if (link.names[1]) {
+          return link.names[1];
         }
       });
   }
@@ -194,6 +185,17 @@ export class CreateSvgService {
     radius: number,
     fontSize: number
   ): void {
+    let stepName: string;
+    let ellipse: any;
+    let color: any;
+    let cx: number;
+    let cy: number;
+    let x: number;
+    let y: number;
+    let height;
+    let width;
+    let elemInfo: string;
+
     // Create SVG container
     const svg = d3
       .select('body')
@@ -213,22 +215,27 @@ export class CreateSvgService {
       const popupElem = d3.select('.popup');
 
       // retrieve the step name
-      const stepName: string = event.srcElement.nextSibling.textContent;
+      if (event.srcElement.nodeName === 'text') {
+        stepName = event.srcElement.textContent;
+        ellipse = event.srcElement.previousSibling;
+      } else {
+        stepName = event.srcElement.nextSibling.textContent;
+        ellipse = event.srcElement;
+      }
+
       if (stepName !== 'Initial' && stepName !== 'Final') {
         // toggle the popup if it is currently shown
         // otherwise, create and show the popup
         if (popupElem.node() !== null) {
           popupElem.remove();
         } else {
-          const ellipse: any = event.srcElement;
-          const color: any = ellipse.getAttribute('fill');
-          const cx: number = Number(ellipse.getAttribute('cx'));
-          const cy: number = Number(ellipse.getAttribute('cy')) + fontSize;
-          const x: number = cx + fontSize;
-          let y: number = cy + fontSize;
-          let height: number = 0;
-          let width: number = 0;
-          let elemInfo: string;
+          color = ellipse.getAttribute('fill');
+          cx = Number(ellipse.getAttribute('cx'));
+          cy = Number(ellipse.getAttribute('cy')) + fontSize;
+          x = cx + fontSize;
+          y = cy + fontSize;
+          height = 0;
+          width = 0;
 
           // find the step in the source xml
           traverse(workflowObj).forEach(element => {
@@ -245,19 +252,13 @@ export class CreateSvgService {
 
               const rectangle = popup
                 .append('rect')
+                .attr('class', 'popup-rectangle')
                 .attr('x', cx)
                 .attr('y', cy)
-                .attr('rx', 15)
-                .attr('ry', 15)
-                .attr('height', 40)
-                .attr('width', 100)
-                .attr('stroke', 'black')
-                .attr('stroke-width', 1)
                 .attr('fill', color);
 
               // retrieve the step attributes
               element.elements.forEach(elem => {
-                console.log(elem);
                 if (elem.name === 'meta') {
                   elemInfo = ` ${elem.attributes.name}: ${
                     elem.elements[0].text
@@ -273,17 +274,15 @@ export class CreateSvgService {
                 }
                 popup
                   .append('text')
+                  .attr('class', 'popup-text')
                   .attr('x', x)
                   .attr('y', y)
                   .attr('font-size', (fontSize * 0.9).toString())
-                  .attr('text-anchor', 'start')
                   .text(elemInfo);
                 y += fontSize;
               });
               rectangle.attr('height', height);
               rectangle.attr('width', width);
-              const popupElem2 = d3.select('.popup');
-              console.log(popupElem2);
             }
           });
         }

@@ -40,8 +40,8 @@
 - Validate the inserted xml and show a warning
 - Validate that the uploaded file contains a workflow
 - Validate the inserted file is an XML file
+- Move styling from code to css file
 
 # TODO
 
-- Move styling from code to css file
 - Add action properties
