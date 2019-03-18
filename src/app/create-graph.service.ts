@@ -14,7 +14,7 @@ export class CreateGraphService {
   constructor() {}
 
   /**
-   * Reset data (after creating SVG).
+   * Reset links and nodes data (after creating SVG).
    *
    */
   clean(): void {

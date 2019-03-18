@@ -220,7 +220,6 @@ export class CreateSvgService {
         if (popupElem.node() !== null) {
           popupElem.remove();
         } else {
-          // const color = d3.scaleOrdinal(d3.schemeRdYlGn[11]);
           const ellipse: any = event.srcElement;
           const color: any = ellipse.getAttribute('fill');
           const cx: number = Number(ellipse.getAttribute('cx'));
@@ -295,13 +294,14 @@ export class CreateSvgService {
   /**
    * Show an alert if XML from input file is not valid.
    *
+   * @param alertMessage Message to display in the alert
    */
-  createAlert(): void {
+  createAlert(alertMessage: string): void {
     d3.select('body')
       .append('div')
       .attr('class', 'alert alert-danger dynamic-content')
       .attr('role', 'alert')
-      .text('Selected file contains invalid XML content!');
+      .text(alertMessage);
   }
 
   /**

@@ -27,7 +27,7 @@ export class AppComponent {
   /**
    * Remove global actions from WFD.
    *
-   * @param jsWorkflow workflow js object
+   * @param jsWorkflow Workflow js object
    */
   private removeGlobalActions(jsWorkflow: Element | ElementCompact): void {
     deepDash.eachDeep(
@@ -41,63 +41,111 @@ export class AppComponent {
   }
 
   /**
+   * Validates whether string is a valid XML and displays appropriate error message.
+   *
+   * @param xmlString String read from input file
+   * @returns Whether xml is valid or not
+   */
+  private validateXML(xmlString: string): boolean {
+    let xmlValid: true | parser.ValidationError;
+
+    xmlValid = parser.validate(xmlString);
+
+    if (xmlValid !== true) {
+      this.createSvgService.createAlert(
+        'Selected file contains invalid XML content!'
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Validates whether xml string contains a workflow.
+   *
+   * @param xmlString String read from input file
+   * @returns Whether xml contains a workflow or not
+   */
+  private validateWorkflow(workflowObj: Element | ElementCompact): boolean {
+    let workflowValid: boolean = false;
+
+    workflowObj.elements.find(element => {
+      if (element.name === 'workflow') {
+        workflowValid = true;
+      }
+    });
+
+    if (workflowValid !== true) {
+      this.createSvgService.createAlert(
+        'Selected XML file does not contain a workflow!'
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Read the file uploaded by the user.
    *
    * @param fileList list of input files selected to visualize- currently, only one file is supported
    */
-  public async onChange(fileList: FileList) {
+  public onChange(fileList: FileList): boolean {
     const file = fileList[0];
     const fileReader: FileReader = new FileReader();
+    const radius: number = 30; // The only parameter needed to be adjusted by the user
+    const margin: number = radius * 1.6;
+    const fontSize: number = radius / 2.9;
+    const circleDistance: number = radius * 4.5;
+
+    let x: number;
+    let y: number;
+    let nodes: SvgNode[];
+    let links: SvgLink[];
+    let linkEndsTuples: linkTuple[];
+    let workflowObj: Element | ElementCompact;
+    let canvasSize: { width: number; height: number };
+    let xmlString: string;
 
     fileReader.onloadend = event => {
-      const radius: number = 30; // The only parameter needed to be adjusted by the user
-      const margin: number = radius * 1.6;
-      const fontSize: number = radius / 2.9;
-      const circleDistance: number = radius * 4.5;
-
-      let x: number;
-      let y: number;
-      let nodes: SvgNode[];
-      let links: SvgLink[];
-      let linkEndsTuples: linkTuple[];
-      let workflowObj: Element | ElementCompact;
-      let canvasSize: { width: number; height: number };
-      let xmlString: string;
-
       this.createSvgService.removePreviousContent();
 
       xmlString = fileReader.result.toString();
 
-      if (parser.validate(xmlString) !== true) {
-        this.createSvgService.createAlert();
-      } else {
-        workflowObj = this.parseWorkflowService.toJs(xmlString);
-
-        this.removeGlobalActions(workflowObj);
-
-        [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
-          workflowObj,
-          margin,
-          circleDistance
-        );
-
-        links = this.createGraphService.createLinks(linkEndsTuples);
-
-        canvasSize = { width: x + margin, height: y + margin };
-        this.createSvgService.createSvg(
-          workflowObj,
-          nodes,
-          links,
-          canvasSize,
-          radius,
-          fontSize
-        );
-
-        this.createGraphService.clean();
+      if (!this.validateXML(xmlString)) {
+        return false;
       }
+
+      workflowObj = this.parseWorkflowService.toJs(xmlString);
+
+      if (!this.validateWorkflow(workflowObj)) {
+        return false;
+      }
+
+      this.removeGlobalActions(workflowObj);
+
+      [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
+        workflowObj,
+        margin,
+        circleDistance
+      );
+
+      links = this.createGraphService.createLinks(linkEndsTuples);
+
+      canvasSize = { width: x + margin, height: y + margin };
+      this.createSvgService.createSvg(
+        workflowObj,
+        nodes,
+        links,
+        canvasSize,
+        radius,
+        fontSize
+      );
+
+      this.createGraphService.clean();
     };
 
     fileReader.readAsText(file);
+    return true;
   }
 
   constructor(

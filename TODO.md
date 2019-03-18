@@ -38,8 +38,10 @@
 - Make it prettier with bootstrap
 - Document the code.
 - Validate the inserted xml and show a warning
+- Validate that the uploaded file contains a workflow
+- Validate the inserted file is an XML file
 
 # TODO
 
-- Validate that the uploaded file contains a workflow
+- Move styling from code to css file
 - Add action properties
