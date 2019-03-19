@@ -67,13 +67,16 @@ export class AppComponent {
    * @returns Whether xml contains a workflow or not
    */
   private validateWorkflow(workflowObj: Element | ElementCompact): boolean {
-    let workflowValid: boolean = false;
+    let workflowValid: boolean;
+    let workflowValidPlaceholder: boolean = false;
 
     workflowObj.elements.find(element => {
       if (element.name === 'workflow') {
-        workflowValid = true;
+        workflowValidPlaceholder = true;
       }
     });
+
+    workflowValid = workflowValidPlaceholder ? true : false;
 
     if (workflowValid !== true) {
       this.createSvgService.createAlert(
