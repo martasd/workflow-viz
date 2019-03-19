@@ -30,14 +30,11 @@ export class AppComponent {
    * @param jsWorkflow Workflow js object
    */
   private removeGlobalActions(jsWorkflow: Element | ElementCompact): void {
-    deepDash.eachDeep(
-      jsWorkflow,
-      (value, key, path, depth, parent, parentKey, parentPath) => {
-        if (value === 'global-actions') {
-          delete parent['elements'];
-        }
+    deepDash.eachDeep(jsWorkflow, (value, key, parentValue, context) => {
+      if (value === 'global-actions') {
+        delete parentValue['elements'];
       }
-    );
+    });
   }
 
   /**
