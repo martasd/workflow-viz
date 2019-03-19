@@ -255,6 +255,8 @@ export class CreateSvgService {
                 .attr('class', 'popup-rectangle')
                 .attr('x', cx)
                 .attr('y', cy)
+                .attr('rx', 15)
+                .attr('ry', 15)
                 .attr('fill', color);
 
               // retrieve the step attributes

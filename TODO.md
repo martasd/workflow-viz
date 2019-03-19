@@ -44,4 +44,5 @@
 
 # TODO
 
+- Display the name of the file which has been read
 - Add action properties
