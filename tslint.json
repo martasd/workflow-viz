@@ -38,6 +38,7 @@
     "no-empty": false,
     "no-empty-interface": true,
     "no-eval": true,
+    "no-implicit-dependencies": [true, "dev"],
     "no-inferrable-types": [false, "ignore-params", "ignore-properties"],
     "no-misused-new": true,
     "no-non-null-assertion": true,
@@ -48,7 +49,10 @@
     "no-submodule-imports": [
       true,
       "@angular/core/testing",
-      "@angular/router/testing"
+      "@angular/router/testing",
+      "@angular/platform-browser-dynamic/testing",
+      "zone.js/dist/zone",
+      "zone.js/dist/zone-testing"
     ],
     "no-switch-case-fall-through": true,
     "no-trailing-whitespace": true,
