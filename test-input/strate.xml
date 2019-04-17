@@ -1,0 +1,1202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE workflow PUBLIC "-/Flo/OpenSymphony Group//DTD OSWorkflow 2.8//EN" "http://www.opensymphony.com/osworkflow/workflow_2_8.dtd">
+
+<!--/////////////////////////////////////////////////////////////////////////////////////////////////////////-->
+<!--/// STRATE  Work flow used for creating new Jcode with 4stage process-->
+<!--/////////////////////////////////////////////////////////////////////////////////////////////////////////-->
+<!--///Version 1.00		2017-12-16	amitj reused workflow discriptor for orders -->
+<!--/////////////////////////////////////////////////////////////////////////////////////////////////////////-->
+<workflow>
+	<initial-actions>
+		<!-- FOR INITIAL ACTION 1 USE ONLY CORRESPONDING MMFCapturer ROLES -->
+		<action id="1" name="Create new Jcode">
+			<restrict-to>
+				<conditions type="AND">
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+						<!-- FOR INITIAL ACTION 1 USE ROLE wf MMFCapturer_CreateMessage -->
+						<arg name="roleId">721</arg>						<!--_$ Role: JcodeCreator $_-->
+					</condition>
+				</conditions>
+			</restrict-to>
+			<results>
+				<!-- send message off to autoaction step. This contains conditional results for automated validation. 
+                    Check step 10 for details -->
+				<unconditional-result old-status="Finished" status="CheckValid" step="10">
+					<post-functions>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.CreateMessageFunction</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">serviceFormatId</arg>
+							<arg name="attribute.value">260</arg>							<!--_$ ServiceFormat: STRATE FIN $_-->
+						</function>
+						<!-- Add SR_Pending tag. This blocks the message from appearing on the next editing step until the called 
+                            service_request component returns the message after processing. -->
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+							<arg name="tagInfo">+MM_Orders,+SR_Pending</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.receiver</arg>
+							<arg name="attribute.value">${destinationAddress}</arg>
+						</function>
+						<!-- Pass New to portal service request to stop incrementation of Order Id -->
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.messageSubState</arg>
+							<arg name="attribute.value">New</arg>
+						</function>
+						<function type="beanshell">
+							<arg name="script">propertySet.setString("ProcessingState", "FirstProcess")</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.sender</arg>
+							<arg name="attribute.value">${logicalTerminalAddress}</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+							<arg name="visibility">G</arg>
+						</function>
+						<function type="beanshell">
+							<arg name="script">Boolean schemaValid = transientVars.get("xmlSourceMessageSchemaValid");
+                                propertySet.setAsActualType("xmlSourceMessageSchemaValid", schemaValid);</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+							<arg name="ipc.messagePrint.comment">Created new message</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+						</function>
+					</post-functions>
+				</unconditional-result>
+			</results>
+		</action>
+		<action id="10" name="Edit">
+			<meta name="ipc.action.allowbulking">true</meta>
+			<meta name="ipc.initialaction.flowstep.displayname">New created Messages</meta>
+			<meta name="ipc.message.tag.id">1276</meta>			<!--_$ Tag: SR_Processed $_-->
+			<meta name="ipc.messageprofile.display.roleId">210</meta>			<!--_$ Role: wf MMFCapturer_CreateMessage $_-->
+			<restrict-to>
+				<conditions type="AND">
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+						<arg name="roleId">210</arg>						<!--_$ Role: wf MMFCapturer_CreateMessage $_-->
+					</condition>
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.MessageTagCondition</arg>
+						<arg name="tagId">1276</arg>						<!--_$ Tag: SR_Processed $_-->
+					</condition>
+				</conditions>
+			</restrict-to>
+			<results>
+				<unconditional-result old-status="New Message" status="Editing" step="6">
+					<post-functions>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.StartWorkflowFunction</arg>
+						</function>
+						<function type="beanshell">
+							<arg name="script">propertySet.setString("ProcessingState", "ReProcess")</arg>
+						</function>
+						<!-- Remove SR_Processed tag to ensure the message is no longer visible in this initial action -->
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+							<arg name="tagInfo">-SR_Processed</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+							<arg name="ipc.messagePrint.comment">Editing initiated by ${callerUserName}/${callerUserProfileId}</arg>
+						</function>
+						<!-- Change visibility to ensure only a single user is editing the message -->
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+							<arg name="visibility">U</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+						</function>
+					</post-functions>
+				</unconditional-result>
+			</results>
+		</action>
+		<action id="11" name="Send to Verification">
+			<meta name="ipc.action.allowbulking">true</meta>
+			<meta name="ipc.initialaction.flowstep.displayname">New created Messages</meta>
+			<meta name="ipc.message.tag.id">1276</meta>			<!--_$ Tag: SR_Processed $_-->
+			<meta name="ipc.messageprofile.display.roleId">210</meta>			<!--_$ Role: wf MMFCapturer_CreateMessage $_-->
+			<restrict-to>
+				<conditions type="AND">
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+						<arg name="roleId">210</arg>						<!--_$ Role: wf MMFCapturer_CreateMessage $_-->
+					</condition>
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.MessageTagCondition</arg>
+						<arg name="tagId">1315</arg>						<!--_$ Tag: SR_ProcessedValid $_-->
+					</condition>
+				</conditions>
+			</restrict-to>
+			<results>
+				<unconditional-result old-status="New Message" status="Verification" step="2">
+					<post-functions>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.StartWorkflowFunction</arg>
+						</function>
+						<!-- Remove SR_Processed tag to ensure the message is no longer visible in this initial action -->
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+							<arg name="tagInfo">-SR_ProcessedValid,-SR_Processed</arg>
+						</function>
+						<function type="beanshell">
+							<arg name="script">propertySet.setString("ProcessingState", "ReProcess")</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.C_ATT_1</arg>
+							<arg name="attribute.value">${callerUserName}</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.D_ATT_1</arg>
+							<arg name="attribute.value">${actionTimestamp}</arg>
+						</function>
+						<function type="beanshell">
+							<arg name="script">propertySet.setAsActualType("inc.last_editor.userId", transientVars.get("callerUserId"));
+                                System.out.println("Last editor of message: " + propertySet.getLong("inc.last_editor.userId"));
+							</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+							<arg name="ipc.messagePrint.comment">Editing initiated by ${callerUserName}/${callerUserProfileId}</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+						</function>
+					</post-functions>
+				</unconditional-result>
+			</results>
+		</action>
+		<action id="12" name="Delete">
+			<meta name="ipc.action.allowbulking">true</meta>
+			<meta name="ipc.initialaction.flowstep.displayname">New created Messages</meta>
+			<meta name="ipc.message.tag.id">1276</meta>			<!--_$ Tag: SR_Processed $_-->
+			<meta name="ipc.messageprofile.display.roleId">210</meta>			<!--_$ Role: wf MMFCapturer_CreateMessage $_-->
+			<restrict-to>
+				<conditions type="AND">
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+						<arg name="roleId">210</arg>						<!--_$ Role: wf MMFCapturer_CreateMessage $_-->
+					</condition>
+					<condition type="class">
+						<arg name="class.name">com.incentage.ipc.workflow.condition.MessageTagCondition</arg>
+						<arg name="tagId">1276</arg>						<!--_$ Tag: SR_Processed $_-->
+					</condition>
+				</conditions>
+			</restrict-to>
+			<results>
+				<unconditional-result old-status="Finished" status="Deleted" step="8">
+					<post-functions>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.StartWorkflowFunction</arg>
+						</function>
+						<!-- Remove SR_Processed tag to ensure the message is no longer visible in this initial action -->
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+							<arg name="tagInfo">-SR_ProcessedValid,-SR_Processed</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.C_ATT_3</arg>
+							<arg name="attribute.value">${callerUserName}</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">attribute.D_ATT_3</arg>
+							<arg name="attribute.value">${actionTimestamp}</arg>
+						</function>
+						<function type="beanshell">
+							<arg name="script">propertySet.setAsActualType("inc.last_editor.userId",
+                                transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                propertySet.getLong("inc.last_editor.userId"));
+							</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+							<arg name="attribute.name">active</arg>
+							<arg name="attribute.value">false</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+							<arg name="ipc.messagePrint.comment">Message deleted by: ${callerUserName}</arg>
+						</function>
+						<function type="class">
+							<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+						</function>
+					</post-functions>
+				</unconditional-result>
+			</results>
+		</action>
+	</initial-actions>
+	<steps>
+		<!-- FOR STEP 1 USE ONLY CORRESPONDING wf MMFCapturer_SendToVerif ROLES -->
+		<step id="1" name="New Messages">
+			<meta name="ipc.message.flowstep.id">781</meta>			<!--_$ MessageFlowStep: MMF_New_Messages $_-->
+			<meta name="ipc.message.tag.id">1276</meta>			<!--_$ Tag: SR_Processed $_-->
+			<actions>
+				<action id="101" name="SendToVerification">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<arg name="roleId">205</arg>								<!--_$ Role: wf MMFCapturer_SendToVerif $_-->
+							</condition>
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.MessageSchemaValidCondition</arg>
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentToVerification" step="2">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateSourceMessageFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_1</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value">${actionTimestamp}</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> Boolean schemaValid = transientVars.get("xmlSourceMessageSchemaValid");
+                                        propertySet.setAsActualType("xmlSourceMessageSchemaValid", schemaValid); </arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="102" name="Send to Correction">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<!-- FOR STEP 1 ACTION 102 USE ROLE wf MMFCapturer_SendToCorr -->
+								<arg name="roleId">204</arg>								<!--_$ Role: wf MMFCapturer_SendToCorr $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentToCorrection" step="5">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">G</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="103" name="Delete Message">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<!-- FOR STEP 1 ACTION 103 USE ROLE wf MMFCapturer_DeleteMessage -->
+								<arg name="roleId">209</arg>								<!--_$ Role: wf MMFCapturer_DeleteMessage $_-->
+
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="Deleted" step="7">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_1</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_3</arg>
+									<arg name="attribute.value">${actionTimestamp}</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">active</arg>
+									<arg name="attribute.value">false</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">Message deleted by: ${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<!-- FOR STEP 2 USE ONLY CORRESPONDING wf MMFVerifier_SendToAuth ROLES -->
+		<step id="2" name="Verification">
+			<meta name="ipc.message.flowstep.id">783</meta>			<!--_$ MessageFlowStep: MMF_Verification $_-->
+			<actions>
+				<action id="201" name="Send to Authorisation">
+					<meta name="ipc.action.allowbulking">true</meta>
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<arg name="roleId">203</arg>								<!--_$ Role: wf MMFVerifier_SendToAuth $_-->
+							</condition>
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.MessageAttributeValueCondition</arg>
+								<arg name="attribute.name">attribute.C_ATT_1</arg>
+								<arg name="comparisonOperator">a:&lt;&gt;</arg>
+								<arg name="attribute.value">${callerUserName}</arg>
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentTo2stAuth" step="4">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateSourceMessageFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_2</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value">${actionTimestamp}</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="202" name="Send to Correction">
+					<restrict-to>
+						<conditions type="AND">
+							<!-- FOR STEP 2 ACTION 202 USE ROLE wf MMFVerifier_SendToCorr -->
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<arg name="roleId">202</arg>								<!--_$ Role: wf MMFVerifier_SendToCorr $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentToCorrection" step="5">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">G</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+
+		<!-- FOR STEP 4 USE ONLY CORRESPONDING MMFAuthoriser ROLES (same as used in step 3)-->
+		<step id="4" name="Authorisation">
+			<meta name="ipc.message.flowstep.id">828</meta>			<!--_$ MessageFlowStep: MMF_2ndAuthorisation $_-->
+			<actions>
+				<action id="401" name="Release Message">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<!-- FOR STEP 4 ACTION 401 USE ROLE MMFAuthoriser_ReleaseMessage -->
+								<arg name="roleId">206</arg>								<!--_$ Role: wf MMFAuthoriser_ReleaseMsg $_-->
+							</condition>
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.MessageAttributeValueCondition</arg>
+								<arg name="attribute.name">attribute.C_ATT_2</arg>
+								<arg name="comparisonOperator">a:&lt;&gt;</arg>
+								<arg name="attribute.value">${callerUserName}</arg>
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="MessageReleased" step="7">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateSourceMessageFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_13</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_3</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value">${actionTimestamp}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.CreateMessageServiceRequestFunction</arg>
+									<arg name="ipc.serviceRequest.requestType">PortalMMOrderFinal_${messageInstance.messageType}</arg>
+									<arg name="ipc.serviceRequest.serviceName">NewMessage</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="402" name="Send to Correction">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<arg name="roleId">213</arg>								<!--_$ Role: wf MMFAuthoriser_SendToCorr $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentToCorrection" step="5">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">G</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<!-- FOR STEP 5 USE ONLY CORRESPONDING MMFCapturer ROLES -->
+		<step id="5" name="Correction">
+			<meta name="ipc.message.flowstep.id">787</meta>			<!--_$ MessageFlowStep: MMF_Correction $_-->
+			<actions>
+				<action id="501" name="EditMessage">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<!-- FOR STEP 5 ACTION 501 USE ROLE wf MMFCapturer_EditMessage -->
+								<arg name="roleId">208</arg>								<!--_$ Role: wf MMFCapturer_EditMessage $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentToEditing" step="6">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">U</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="502" name="DeleteMessage">
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<!-- FOR STEP 5 ACTION 502 USE ROLE wf MMFCapturer_DeleteMessage -->
+								<arg name="roleId">209</arg>								<!--_$ Role: wf MMFCapturer_DeleteMessage $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="Deleted" step="8">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_3</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_6</arg>
+									<arg name="attribute.value">${actionTimestamp}</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">active</arg>
+									<arg name="attribute.value">false</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">Message deleted by: ${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="503" name="SendToVerification">
+					<meta name="ipc.action.allowbulking">true</meta>
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<!-- FOR STEP 5 ACTION 503 USE ROLE wf MMFCapturer_SendToVerif -->
+								<arg name="roleId">205</arg>								<!--_$ Role: wf MMFCapturer_SendToVerif $_-->
+							</condition>
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.MessageSchemaValidCondition</arg>
+							</condition>
+							<!-- Check that the message has the Tag wfMsgIsValid. If not then don't allow this function. 
+                            This is set by the ServiceRequest which checks details here. -->
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.MessageTagCondition</arg>
+								<arg name="tagId">1275</arg>								<!--_$ Tag: wfMsgIsValid $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<unconditional-result old-status="Finished" status="SentToVerification" step="2">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateSourceMessageFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_1</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value">${actionTimestamp}</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> Boolean schemaValid = transientVars.get("xmlSourceMessageSchemaValid");
+                                        propertySet.setAsActualType("xmlSourceMessageSchemaValid", schemaValid); </arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<!-- FOR STEP 6 USE ONLY CORRESPONDING MMFCapturer ROLES -->
+		<!-- The save action also sends the message off -->
+		<step id="6" name="Edit">
+			<meta name="ipc.message.flowstep.id">781</meta>			<!--_$ MessageFlowStep: MMF_New_Messages $_-->
+			<meta name="ipc.message.editable">true</meta>
+			<actions>
+				<action id="601" name="Save">
+					<meta name="ipc.action.allowbulking">true</meta>
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<arg name="roleId">207</arg>								<!--_$ Role: wf MMFCapturer_Save $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<!-- After each edit go to AutoVerify -->
+						<unconditional-result old-status="Editing" status="AutoVerify" step="10">
+							<post-functions>
+								<!-- Reset the previous Authorisation and Verification usernames to ensure these can process this message as if it was a new one. -->
+								<!-- Reset Verification data -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_2</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<!-- Reset 1st Authorisor data -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_3</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_3</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<!-- Reset 2nd Authorisor data -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_13</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<!-- Pass Save to portal service request to stop incrementation of Order Id -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.messageSubState</arg>
+									<arg name="attribute.value">Save</arg>
+								</function>
+								<!-- Set new values -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.receiver</arg>
+									<arg name="attribute.value">${destinationAddress}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.sender</arg>
+									<arg name="attribute.value">${logicalTerminalAddress}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">G</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateSourceMessageFunction</arg>
+								</function>
+								<!-- Remove the wfMsgIsValid tag to block processing of this message until it has been processed via service request component.-->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+									<arg name="tagInfo">-wfMsgIsValid</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> Boolean schemaValid = transientVars.get("xmlSourceMessageSchemaValid");
+                                        propertySet.setAsActualType("xmlSourceMessageSchemaValid", schemaValid); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+				<action id="602" name="Delete">
+					<meta name="ipc.action.allowbulking">false</meta>
+					<restrict-to>
+						<conditions type="AND">
+							<condition type="class">
+								<arg name="class.name">com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+								<arg name="roleId">207</arg>								<!--_$ Role: wf MMFCapturer_Save $_-->
+							</condition>
+						</conditions>
+					</restrict-to>
+					<results>
+						<!-- After each edit go to AutoVerify -->
+						<unconditional-result old-status="Editing" status="Deleted" step="8">
+							<post-functions>
+								<!-- Reset the previous Authorisation and Verification usernames to ensure these can process this message as if it was a new one. -->
+								<!-- Reset Verification data -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_2</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<!-- Reset 1st Authorisor data -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_3</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_3</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<!-- Reset 2nd Authorisor data -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_13</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.D_ATT_1</arg>
+									<arg name="attribute.value"/>
+								</function>
+								<!-- Set new values -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.receiver</arg>
+									<arg name="attribute.value">${destinationAddress}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.sender</arg>
+									<arg name="attribute.value">${logicalTerminalAddress}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">G</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">Message Deleted</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<!-- NO ROLES APPLICABLE -->
+		<step id="7" name="Released">
+			<meta name="ipc.message.flowstep.id">789</meta>			<!--_$ MessageFlowStep: MMF_Released $_-->
+			<meta name="ipc.messageprofile.display">false</meta>
+			<actions>
+				<action id="701" name="Terminate Workflow" auto="true">
+					<results>
+						<unconditional-result old-status="Finished" status="Released" step="-1">
+							<post-functions>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.TerminateWorkflowFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">Automatically terminating workflow</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<!-- NO ROLES APPLICABLE -->
+		<step id="8" name="Deleted">
+			<meta name="ipc.message.flowstep.id">790</meta>			<!--_$ MessageFlowStep: MMF_Deleted $_-->
+			<meta name="ipc.messageprofile.display">false</meta>
+			<actions>
+				<action id="801" name="Terminate Workflow" auto="true">
+					<results>
+						<unconditional-result old-status="Finished" status="Deleted" step="-1">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.WebServiceRequestFunction</arg>
+									<arg name="endpointUrl">http://localhost:8071/services/process.processMessageSoap/</arg>
+									<arg name="messageType">WSPortalJCodeOrderEntryDelete</arg>
+									<!-- <arg name="messageSubState">${messageInstance.messageSubState}</arg> -->
+									<arg name="messageSubState">Deleted</arg>
+									<arg name="clobMessage">${messageInstance.xmlSourceMessage}</arg>
+									<arg name="MessageProfileID">${messageProfileId}</arg>
+									<arg name="callerUserName">${callerUserName}</arg>
+									<!-- <arg name="C_ATT_1">${C_ATT_1}</arg> -->
+									<arg name="Sender">${messageInstance.organisation}</arg>
+									<arg name="messageID">${messageInstance.messageId}</arg>
+									<!-- <arg name="Id2">${messageInstance.messageId2}</arg> -->
+									<!-- <arg name="debug">true</arg> -->
+								</function>
+								<function type="beanshell">
+									<arg name="script"> propertySet.setAsActualType("inc.last_editor.userId",
+                                        transientVars.get("callerUserId")); System.out.println("Last editor of message: " +
+                                        propertySet.getLong("inc.last_editor.userId")); </arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.TerminateWorkflowFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">Automatically terminating workflow</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.messageSubState</arg>
+									<arg name="attribute.value">Deleted</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.organisation</arg>
+									<arg name="attribute.value">DUMBZAJJXXX</arg>
+								</function>
+								<!-- complete message by setting attribute "active" to false -->
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">active</arg>
+									<arg name="attribute.value">false</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.NavigationFunction</arg>
+									<arg name="view">messageProfile</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<!-- NO ROLES APPLICABLE used to complete message workflow for 
+            intermediate step while messages are being checked in the service request compnent-->
+		<step id="9" name="complete">
+			<meta name="ipc.messageprofile.display">false</meta>
+			<meta name="ipc.message.flowstep.id">850</meta>			<!--_$ MessageFlowStep: MMF_pending $_-->
+			<actions>
+				<action id="901" name="TerminateWorkflow" auto="true">
+					<results>
+						<unconditional-result old-status="any" status="complete" step="-1">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.TerminateWorkflowFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.NavigationFunction</arg>
+									<arg name="view">messageProfile</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<step id="10" name="AutoValidateNewMessage">
+			<meta name="ipc.messageprofile.display">false</meta>
+			<meta name="ipc.message.flowstep.id">870</meta>			<!--_$ MessageFlowStep: MMF_autovalidate $_-->
+			<actions>
+				<action id="1001" name="Validate Message" auto="true">
+					<results>
+						<result old-status="Editing" status="Pending" step="11">
+							<conditions type="AND">
+								<condition type="beanshell">
+									<arg name="script">
+                                        Boolean schemaValid = propertySet.getAsActualType("xmlSourceMessageSchemaValid");
+                                        return schemaValid;
+									</arg>
+								</condition>
+							</conditions>
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.WebServiceRequestFunction</arg>
+									<arg name="endpointUrl">http://localhost:8071/services/process.processMessageSoap/</arg>
+									<arg name="messageType">WSPortalMMOrderEntry_${messageInstance.messageType}</arg>
+									<arg name="messageSubState">${messageInstance.messageSubState}</arg>
+									<arg name="clobMessage">${messageInstance.xmlSourceMessage}</arg>
+									<arg name="MessageProfileID">${messageProfileId}</arg>
+									<arg name="callerUserName">${callerUserName}</arg>
+									<arg name="C_ATT_1">${C_ATT_1}</arg>
+									<arg name="Sender">${messageInstance.organisation}</arg>
+									<arg name="debug">true</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_1</arg>
+									<arg name="attribute.value">${callerUserName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">xmlSourceMessage</arg>
+									<arg name="attribute.value">${messageInstance.xmlSourceMessage}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">messageErrors</arg>
+									<arg name="attribute.value">${messageErrors}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+									<arg name="tagInfo">+${messageTags}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.messageSubState</arg>
+									<arg name="attribute.value">Validated</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_29</arg>
+									<arg name="attribute.value">${messageJcode}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_33</arg>
+									<arg name="attribute.value">${messageCD_ACC_NBR}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_34</arg>
+									<arg name="attribute.value">${messageJcodeName}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_30</arg>
+									<arg name="attribute.value">${messageSCRIP_ACC_NBR}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_31</arg>
+									<arg name="attribute.value">${messageSCRIP_ACC_BR}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">attribute.C_ATT_32</arg>
+									<arg name="attribute.value">${messageCASH_ACC_NBR}</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+									<arg name="attribute.name">reference1</arg>
+									<arg name="attribute.value">${messageJcodeName}</arg>
+								</function>
+								<!-- Was message type 2 below-->
+								<function type="beanshell">
+									<arg name="script">Boolean schemaValid = transientVars.get("xmlSourceMessageSchemaValid");
+                                        propertySet.setAsActualType("xmlSourceMessageSchemaValid", schemaValid);</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">New message will now be autochecked in step 11</arg>
+								</function>
+							</post-functions>
+						</result>
+						<!-- If the message is not valid the unconditional result will move the message back to automatic editing.-->
+						<unconditional-result old-status="New Message" status="Edit" step="6">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">New message is not valid and will go into the correction flow</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">U</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+		<step id="11" name="AutoValidateCreatedMessage">
+			<meta name="ipc.messageprofile.display">false</meta>
+			<meta name="ipc.message.flowstep.id">910</meta>			<!--_$ MessageFlowStep: MMF_autovalidateStep2 $_-->
+			<actions>
+				<action id="1101" name="Validate Message" auto="true" view="EnterOptionalComment">
+					<results>
+						<result old-status="Editing" status="Verify" step="2">
+							<conditions type="AND">
+								<condition type="beanshell">
+									<arg name="script">
+                                        Boolean schemaValid = propertySet.getAsActualType("xmlSourceMessageSchemaValid");
+                                        return schemaValid;
+									</arg>
+								</condition>
+								<condition type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.condition.MessageTagCondition</arg>
+									<arg name="tagId">1315</arg>									<!--_$ Tag: SR_ProcessedValid $_-->
+								</condition>
+							</conditions>
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">O</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">New message is valid and will now be sent to Verify step</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.NavigationFunction</arg>
+									<arg name="view">messageProfile</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</result>
+						<!-- If the message is not valid the unconditional result will move the message back to automatic editing.-->
+						<unconditional-result old-status="New Message" status="Edit" step="6">
+							<post-functions>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageFlowStepFunction</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+									<arg name="ipc.messagePrint.comment">New message is not valid and will go into the correction flow</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.ChangeVisibility</arg>
+									<arg name="visibility">U</arg>
+								</function>
+								<function type="class">
+									<arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+								</function>
+							</post-functions>
+						</unconditional-result>
+					</results>
+				</action>
+			</actions>
+		</step>
+	</steps>
+</workflow>

@@ -1,0 +1,112 @@
+<workflow>
+    <!-- Define Initial-Actions. Any message coming from the BUS can only be reacted to using an Initial Action  -->
+    <initial-actions>
+        <!-- Creating messages is also an initial action. This Action must have the id=1 as this causes IPC to display the New Message and Message From Template ActionLinks 
+                DO NOT USE ID 1 for normal Query initial actions. This is reserved for Creating new messages -->
+        <!-- Copy this initial action to create new Query entries -->
+        <!-- After copying rename to match Query and provide new unique Action ID -->
+    <action id="2" name="Create Report" view="ReportRequest">
+            <meta name="ipc.initial.action.type">profile</meta>
+            <!-- Create new role in IPC matching the Query name and use it here. Don't forget to give this action to the users or groups -->
+            <meta name="ipc.messageprofile.display.roleId">341</meta>
+            <restrict-to>
+                <conditions type="AND">
+                    <condition type="class">
+                        <arg name="class.name"
+                            >com.incentage.ipc.workflow.condition.UserIsInRoleCondition</arg>
+                        <!-- FOR INITIAL ACTION 1 USE ROLE wf MMFCapturer_CreateMessage -->
+                        <arg name="roleId">341</arg>
+                    </condition>
+                </conditions>
+            </restrict-to>
+            <results>
+                <unconditional-result old-status="Finished" status="NewMessageCreated" step="6">
+                    <post-functions>
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.CreateMessageFunction</arg>
+                        </function>
+                        <!-- persist current QueryType to a Propery set. This is specific per workflow and stores data in the OS_PROPERTYENTRY table -->
+                        <function type="beanshell">
+                            <arg name="script">propertySet.setString("QueryName", "ReportRequest")</arg>
+                        </function>
+                        <function type="beanshell">
+                            <arg name="script">propertySet.setString("organisationKey", "${messageInstance.organisation}")</arg>
+                        </function>
+                        <!-- Adjust this MT value to match the current Query. This must also exist in the RulesStudio 
+                                of the EquityQueryResponse component. 
+                                This entry point in the rules must be under the CommonLoadQueryMask. copy an existing one from there.
+                                The new MT must return an xml matching the Query xsd you have defined in the eForm.
+                                In the new rules adjust the field XmlMessage to fit this query. -->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.WebServiceRequestFunction</arg>
+                            <arg name="endpointUrl">http://localhost:8172/services/process.processMessageSoap/</arg>
+                            <arg name="MT">${Request}</arg>
+                            <arg name="organisationKey">${organisationKey}</arg>
+                            <arg name="actionFormXml">${actionFormXml}</arg>
+                            <arg name="debugMode">true</arg>
+                        </function>
+                        <!-- Adjust this messageType value to match the current Query (As above 1:1) This defines which eForm is used-->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+                            <arg name="attribute.name">attribute.messageType</arg>
+                            <arg name="attribute.value">${Request}</arg>
+                        </function>
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.ChangeMessageTagsFunction</arg>
+                            <arg name="tagInfo">+Report</arg>
+                        </function>
+                        <!-- Store the empty message returned from the WebService -->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+                            <arg name="attribute.name">xmlSourceMessage</arg>
+                            <arg name="attribute.value">${xmlMessage}</arg>
+                        </function>
+                        <!-- Set the Service Format to "Reports". This defines the name for the C_REF_1, 2 and 3 fields. -->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.UpdateMessageAttributeFunction</arg>
+                            <arg name="attribute.name">serviceFormatId</arg>
+                            <arg name="attribute.value">201</arg>
+                        </function>
+                        <!-- Set comment that will be displayed in the History trail of this message-->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+                            <arg name="ipc.messagePrint.comment">Created new report request</arg>
+                        </function>
+                        <!-- Persist changes -->
+                        <function type="class">
+                            <arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+                        </function>
+                    </post-functions>
+                </unconditional-result>
+            </results>
+        </action>
+    </initial-actions>
+    <!-- The Steps in a Workflow must all be defined here. Most steps also have message Flowsteps assigned which enables 1. IPC to move the message to this Flowstep and 2. for the message to be displayed only in this steps -->
+    <steps>
+        <step id="6" name="sent">
+            <meta name="ipc.message.flowstep.id">341</meta>
+            <meta name="ipc.messageprofile.display">false</meta>
+            <actions>
+                <action id="601" name="TerminateWorkflow" auto="true">
+                    <results>
+                        <unconditional-result old-status="Finished" status="sent" step="-1">
+                            <post-functions>
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.TerminateWorkflowFunction</arg>
+                                </function>
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.GenerateWorkflowHistoryFunction</arg>
+                                    <arg name="ipc.messagePrint.comment">Automatically terminating workflow</arg>
+                                </function>
+                                <function type="class">
+                                    <arg name="class.name">com.incentage.ipc.workflow.function.AccountMessageChangeFunction</arg>
+                                </function>
+                            </post-functions>
+                        </unconditional-result>
+                    </results>
+                </action>
+            </actions>
+        </step>
+    </steps>
+</workflow>
+

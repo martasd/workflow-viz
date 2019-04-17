@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<StructureMapping>
+  <MessageType>IRS-643</MessageType>
+  <Source>
+    <MessageStructure Name="Source Structure" UndefinedContentHandle="hide">
+      <Field id="0" Name="Input" OccurrenceType="Mandatory" MinOccurs="1" MaxOccurs="1"/>
+      <Field id="1" Name="Condition" OccurrenceType="Mandatory" MinOccurs="1" MaxOccurs="1"/>
+    </MessageStructure>
+  </Source>
+  <Target>
+    <MessageStructure Name="Target Structure">
+      <Field id="0" fieldId="901400005" Name="Output" OccurrenceType="Mandatory" MinOccurs="1" MaxOccurs="1">
+        <Mapping>
+          <MappingAction>
+            <NodeLink refNodeId="0"/>
+            <!--/Input-->
+            <NodeCondition refNodeId="1" Condition="new" Operator="aequal"/>
+            <!--/Condition-->
+            <Create/>
+          </MappingAction>
+        </Mapping>
+      </Field>
+    </MessageStructure>
+  </Target>
+</StructureMapping>
