@@ -5,15 +5,15 @@ import { CreateSvgService } from './create-svg.service';
 import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
 
-type linkTuple = [string[], number, number];
-
 import deepdash from 'deepdash';
 import * as parser from 'fast-xml-parser';
 import * as lodash from 'lodash';
 const deepDash = deepdash(lodash);
 
+type linkTuple = [string[], number, number];
+
 /**
- * Draw the nodes and links in an SVG container
+ * Visualize workflow described in an uploaded file by drawing nodes connected by links using svg.
  * source: https://stackoverflow.com/questions/28102089/simple-graph-of-nodes-and-links-without-using-force-layout
  */
 @Component({
@@ -38,7 +38,7 @@ export class AppComponent {
   }
 
   /**
-   * Validates whether string is a valid XML and displays appropriate error message.
+   * Validate whether string is a valid XML and display appropriate error message.
    *
    * @param xmlString String read from input file
    * @returns Whether xml is valid or not
@@ -87,12 +87,12 @@ export class AppComponent {
   /**
    * Read the file uploaded by the user.
    *
-   * @param fileList list of input files selected to visualize- currently, only one file is supported
+   * @param fileList list of input files selected to visualize- currently, uploading a single file is supported
    */
-  public onChange(fileList: FileList): boolean {
+  public uploadFile(fileList: FileList): boolean {
     const file = fileList[0];
     const fileReader: FileReader = new FileReader();
-    const radius: number = 30; // The only parameter needed to be adjusted by the user
+    const radius: number = 30; // The only variable that should be changed to scale the visualization
     const margin: number = radius * 1.6;
     const fontSize: number = radius / 2.9;
     const circleDistance: number = radius * 4.5;
