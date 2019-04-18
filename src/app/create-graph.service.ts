@@ -4,6 +4,9 @@ import { SvgLink, SvgNode } from './d3/models';
 type linkTuple = [string[], number, number];
 declare var traverse: any;
 
+/**
+ * Create nodes to represent workflow steps and links to represent workflow actions.
+ */
 @Injectable({
   providedIn: 'root'
 })

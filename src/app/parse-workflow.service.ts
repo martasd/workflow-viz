@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Element, ElementCompact, xml2js, xml2json } from 'xml-js';
+import { Element, xml2js, xml2json } from 'xml-js';
 
 /**
  * Parse XML Workflow descriptor.

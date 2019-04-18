@@ -4,6 +4,9 @@ import { SvgLink, SvgNode } from './d3/models';
 
 declare var traverse: any;
 
+/**
+ * Creates all svg elements to represent nodes and links from the workflow.
+ */
 @Injectable({
   providedIn: 'root'
 })
