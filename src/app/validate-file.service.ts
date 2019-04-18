@@ -4,7 +4,7 @@ import { Element } from 'xml-js';
 import { CreateSvgService } from './create-svg.service';
 
 /**
- * Validate upload workflow file.
+ * Validate uploaded workflow file.
  */
 @Injectable({
   providedIn: 'root'
@@ -25,7 +25,7 @@ export class ValidateFileService {
 
     if (xmlValid !== true) {
       this.createSvgService.createAlert(
-        'Selected file contains invalid XML content!'
+        'Selected file does not contain a valid XML content!'
       );
       return false;
     }

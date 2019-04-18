@@ -42,7 +42,7 @@ export class AppComponent {
    *
    * @param fileList list of input files selected to visualize- currently, uploading a single file is supported
    */
-  public uploadFile(fileList: FileList): boolean {
+  uploadFile(fileList: FileList): boolean {
     const file = fileList[0];
     const fileReader: FileReader = new FileReader();
     const radius: number = 30; // The only variable that should be changed to scale the visualization
