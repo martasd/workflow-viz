@@ -1,4 +1,6 @@
-# DONE
+# WORK LOG
+
+## DONE
 
 - Investigate using D3.js in Angular
 - Add D3 library and types
@@ -42,7 +44,6 @@
 - Validate the inserted file is an XML file
 - Move styling from code to css file
 
-# TODO
+## TODO
 
 - Display the name of the file which has been read
-- Add action properties
