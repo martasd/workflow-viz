@@ -9,7 +9,7 @@ import { Element, ElementCompact, xml2js, xml2json } from 'xml-js';
 })
 export class ParseWorkflowService {
   json: string;
-  js: Element | ElementCompact;
+  js: Element;
 
   constructor() {}
 
@@ -30,8 +30,8 @@ export class ParseWorkflowService {
    * @param xml xml wfd string
    * @returns  js object
    */
-  toJs(xml: string): Element | ElementCompact {
-    this.js = xml2js(xml);
+  toJs(xml: string): Element {
+    this.js = xml2js(xml) as Element;
     return this.js;
   }
 }

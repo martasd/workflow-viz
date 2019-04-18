@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { Element, ElementCompact } from 'xml-js';
+import { Element } from 'xml-js';
 import { CreateGraphService } from './create-graph.service';
 import { CreateSvgService } from './create-svg.service';
 import { SvgLink, SvgNode } from './d3/models';
 import { ParseWorkflowService } from './parse-workflow.service';
+import { ValidateFileService } from './validate-file.service';
 
 import deepdash from 'deepdash';
-import * as parser from 'fast-xml-parser';
 import * as lodash from 'lodash';
 const deepDash = deepdash(lodash);
 
@@ -29,7 +29,7 @@ export class AppComponent {
    *
    * @param jsWorkflow Workflow js object
    */
-  private removeGlobalActions(jsWorkflow: Element | ElementCompact): void {
+  private removeGlobalActions(jsWorkflow: Element): void {
     deepDash.eachDeep(jsWorkflow, (value, key, parentValue, context) => {
       if (value === 'global-actions') {
         delete parentValue['elements'];
@@ -38,54 +38,7 @@ export class AppComponent {
   }
 
   /**
-   * Validate whether string is a valid XML and display appropriate error message.
-   *
-   * @param xmlString String read from input file
-   * @returns Whether xml is valid or not
-   */
-  private validateXML(xmlString: string): boolean {
-    let xmlValid: true | parser.ValidationError;
-
-    xmlValid = parser.validate(xmlString);
-
-    if (xmlValid !== true) {
-      this.createSvgService.createAlert(
-        'Selected file contains invalid XML content!'
-      );
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Validates whether xml string contains a workflow.
-   *
-   * @param xmlString String read from input file
-   * @returns Whether xml contains a workflow or not
-   */
-  private validateWorkflow(workflowObj: Element | ElementCompact): boolean {
-    let workflowValid: boolean;
-    let workflowValidPlaceholder: boolean = false;
-
-    workflowObj.elements.find(element => {
-      if (element.name === 'workflow') {
-        workflowValidPlaceholder = true;
-      }
-    });
-
-    workflowValid = workflowValidPlaceholder ? true : false;
-
-    if (workflowValid !== true) {
-      this.createSvgService.createAlert(
-        'Selected XML file does not contain a workflow!'
-      );
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Read the file uploaded by the user.
+   * Read the file uploaded by the user. This function gets called when the user uploads an input file.
    *
    * @param fileList list of input files selected to visualize- currently, uploading a single file is supported
    */
@@ -102,7 +55,7 @@ export class AppComponent {
     let nodes: SvgNode[];
     let links: SvgLink[];
     let linkEndsTuples: linkTuple[];
-    let workflowObj: Element | ElementCompact;
+    let workflowObj: Element;
     let canvasSize: { width: number; height: number };
     let xmlString: string;
 
@@ -111,13 +64,13 @@ export class AppComponent {
 
       xmlString = fileReader.result.toString();
 
-      if (!this.validateXML(xmlString)) {
+      if (!this.validateFileService.validateXML(xmlString)) {
         return false;
       }
 
       workflowObj = this.parseWorkflowService.toJs(xmlString);
 
-      if (!this.validateWorkflow(workflowObj)) {
+      if (!this.validateFileService.validateWorkflow(workflowObj)) {
         return false;
       }
 
@@ -151,7 +104,8 @@ export class AppComponent {
   constructor(
     private parseWorkflowService: ParseWorkflowService,
     private createGraphService: CreateGraphService,
-    private createSvgService: CreateSvgService
+    private createSvgService: CreateSvgService,
+    private validateFileService: ValidateFileService
   ) {
     this.title = 'workflow-viz';
   }
