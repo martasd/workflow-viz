@@ -13,6 +13,103 @@ declare var traverse: any;
 export class CreateSvgService {
   constructor() {}
 
+  private createNodePopup(
+    svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
+    workflowObj: object,
+    fontSize: number
+  ): void {
+    let stepName: string;
+    let ellipse: any;
+    let color: any;
+    let cx: number;
+    let cy: number;
+    let x: number;
+    let y: number;
+    let height;
+    let width;
+    let elemInfo: string;
+
+    svg.node().addEventListener('click', event => {
+      const popupElem = d3.select('.popup');
+
+      // retrieve the step name
+      if (event.srcElement.nodeName === 'text') {
+        stepName = event.srcElement.textContent;
+        ellipse = event.srcElement.previousSibling;
+      } else {
+        stepName = event.srcElement.nextSibling.textContent;
+        ellipse = event.srcElement;
+      }
+
+      if (stepName !== 'Initial' && stepName !== 'Final') {
+        // toggle the popup if it is currently shown
+        // otherwise, create and show the popup
+        if (popupElem.node() !== null) {
+          popupElem.remove();
+        } else {
+          color = ellipse.getAttribute('fill');
+          cx = Number(ellipse.getAttribute('cx'));
+          cy = Number(ellipse.getAttribute('cy')) + fontSize;
+          x = cx + fontSize;
+          y = cy + fontSize;
+          height = 0;
+          width = 0;
+
+          // find the step in the source xml
+          traverse(workflowObj).forEach(element => {
+            if (
+              element.name === 'step' &&
+              element.attributes.name === stepName
+            ) {
+              const popup: d3.Selection<
+                SVGGElement,
+                {},
+                HTMLElement,
+                any
+              > = svg.append('g').attr('class', 'popup');
+
+              const rectangle = popup
+                .append('rect')
+                .attr('class', 'popup-rectangle')
+                .attr('x', cx)
+                .attr('y', cy)
+                .attr('rx', 15)
+                .attr('ry', 15)
+                .attr('fill', color);
+
+              // retrieve the step attributes
+              element.elements.forEach(elem => {
+                if (elem.name === 'meta') {
+                  elemInfo = ` ${elem.attributes.name}: ${
+                    elem.elements[0].text
+                  }`;
+                  // calculate dimensions of the popup
+                  const elemInfoLen: number = elemInfo.length * 5;
+                  if (elemInfoLen > width) {
+                    width = elemInfoLen;
+                  }
+                  height += 20;
+                } else {
+                  elemInfo = '';
+                }
+                popup
+                  .append('text')
+                  .attr('class', 'popup-text')
+                  .attr('x', x)
+                  .attr('y', y)
+                  .attr('font-size', (fontSize * 0.9).toString())
+                  .text(elemInfo);
+                y += fontSize;
+              });
+              rectangle.attr('height', height);
+              rectangle.attr('width', width);
+            }
+          });
+        }
+      }
+    });
+  }
+
   /**
    * Create an svg entity (currently ellipse) for each node.
    *
@@ -21,7 +118,7 @@ export class CreateSvgService {
    * @param radius radius of the ellipse
    * @param fontSize text size inside the svg node
    */
-  createSvgCircles(
+  private createSvgCircles(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
     nodes: SvgNode[],
     radius: number,
@@ -112,7 +209,7 @@ export class CreateSvgService {
    * @param links array of data links
    * @param fontSize text size of line labels
    */
-  createSvgLines(
+  private createSvgLines(
     svg: d3.Selection<SVGSVGElement, {}, HTMLElement, any>,
     nodes: SvgNode[],
     links: SvgLink[],
@@ -188,17 +285,6 @@ export class CreateSvgService {
     radius: number,
     fontSize: number
   ): void {
-    let stepName: string;
-    let ellipse: any;
-    let color: any;
-    let cx: number;
-    let cy: number;
-    let x: number;
-    let y: number;
-    let height;
-    let width;
-    let elemInfo: string;
-
     // Create SVG container
     const svg = d3
       .select('body')
@@ -214,85 +300,7 @@ export class CreateSvgService {
 
     this.createSvgCircles(svg, nodes, radius, fontSize);
 
-    svg.node().addEventListener('click', event => {
-      const popupElem = d3.select('.popup');
-
-      // retrieve the step name
-      if (event.srcElement.nodeName === 'text') {
-        stepName = event.srcElement.textContent;
-        ellipse = event.srcElement.previousSibling;
-      } else {
-        stepName = event.srcElement.nextSibling.textContent;
-        ellipse = event.srcElement;
-      }
-
-      if (stepName !== 'Initial' && stepName !== 'Final') {
-        // toggle the popup if it is currently shown
-        // otherwise, create and show the popup
-        if (popupElem.node() !== null) {
-          popupElem.remove();
-        } else {
-          color = ellipse.getAttribute('fill');
-          cx = Number(ellipse.getAttribute('cx'));
-          cy = Number(ellipse.getAttribute('cy')) + fontSize;
-          x = cx + fontSize;
-          y = cy + fontSize;
-          height = 0;
-          width = 0;
-
-          // find the step in the source xml
-          traverse(workflowObj).forEach(element => {
-            if (
-              element.name === 'step' &&
-              element.attributes.name === stepName
-            ) {
-              const popup: d3.Selection<
-                SVGGElement,
-                {},
-                HTMLElement,
-                any
-              > = svg.append('g').attr('class', 'popup');
-
-              const rectangle = popup
-                .append('rect')
-                .attr('class', 'popup-rectangle')
-                .attr('x', cx)
-                .attr('y', cy)
-                .attr('rx', 15)
-                .attr('ry', 15)
-                .attr('fill', color);
-
-              // retrieve the step attributes
-              element.elements.forEach(elem => {
-                if (elem.name === 'meta') {
-                  elemInfo = ` ${elem.attributes.name}: ${
-                    elem.elements[0].text
-                  }`;
-                  // calculate dimensions of the popup
-                  const elemInfoLen: number = elemInfo.length * 5;
-                  if (elemInfoLen > width) {
-                    width = elemInfoLen;
-                  }
-                  height += 20;
-                } else {
-                  elemInfo = '';
-                }
-                popup
-                  .append('text')
-                  .attr('class', 'popup-text')
-                  .attr('x', x)
-                  .attr('y', y)
-                  .attr('font-size', (fontSize * 0.9).toString())
-                  .text(elemInfo);
-                y += fontSize;
-              });
-              rectangle.attr('height', height);
-              rectangle.attr('width', width);
-            }
-          });
-        }
-      }
-    });
+    this.createNodePopup(svg, workflowObj, fontSize);
   }
 
   /**
