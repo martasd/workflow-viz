@@ -14,6 +14,7 @@ type linkTuple = [string[], number, number];
 
 /**
  * Visualize workflow described in an uploaded file by drawing nodes connected by links using svg.
+ *
  * source: https://stackoverflow.com/questions/28102089/simple-graph-of-nodes-and-links-without-using-force-layout
  */
 @Component({
@@ -25,7 +26,7 @@ export class AppComponent {
   title: string;
 
   /**
-   * Remove global actions from WFD.
+   * Remove global actions from WFD. These do not need to be displayed in the visualization.
    *
    * @param jsWorkflow Workflow js object
    */
@@ -41,14 +42,15 @@ export class AppComponent {
    * Read the file uploaded by the user. This function gets called when the user uploads an input file.
    *
    * @param fileList list of input files selected to visualize- currently, uploading a single file is supported
+   * @returns Whether visualization has been created successfully
    */
   uploadFile(fileList: FileList): boolean {
     const file = fileList[0];
     const fileReader: FileReader = new FileReader();
-    const radius: number = 30; // The only variable that should be changed to scale the visualization
-    const margin: number = radius * 1.6;
-    const fontSize: number = radius / 2.9;
-    const circleDistance: number = radius * 4.5;
+    const nodeRadius: number = 30; // The only variable that should be changed to scale the visualization
+    const margin: number = nodeRadius * 1.6;
+    const fontSize: number = nodeRadius / 2.9;
+    const nodeDistance: number = nodeRadius * 4.5;
 
     let x: number;
     let y: number;
@@ -59,6 +61,7 @@ export class AppComponent {
     let canvasSize: { width: number; height: number };
     let xmlString: string;
 
+    // Create visualization when input file is loaded
     fileReader.onloadend = event => {
       this.createSvgService.removePreviousContent();
 
@@ -79,7 +82,7 @@ export class AppComponent {
       [nodes, linkEndsTuples, x, y] = this.createGraphService.createNodes(
         workflowObj,
         margin,
-        circleDistance
+        nodeDistance
       );
 
       links = this.createGraphService.createLinks(linkEndsTuples);
@@ -90,7 +93,7 @@ export class AppComponent {
         nodes,
         links,
         canvasSize,
-        radius,
+        nodeRadius,
         fontSize
       );
 

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { SvgLink, SvgNode } from './d3/models';
 
 type linkTuple = [string[], number, number];
-declare var traverse: any;
+declare const traverse: any;
 
 /**
  * Create nodes to represent workflow steps and links to represent workflow actions.
@@ -48,8 +48,8 @@ export class CreateGraphService {
     let nodeFound: SvgNode;
     const linkEndsTuples: linkTuple[] = [];
 
+    // Create nodes for steps, actions and result xml elements
     traverse(workflowObj).map(elem => {
-      // Create nodes for steps, actions and result xml elements
       switch (elem.name) {
         case 'initial-actions': {
           // Initial node will have id 0

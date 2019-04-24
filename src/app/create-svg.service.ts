@@ -111,7 +111,7 @@ export class CreateSvgService {
   }
 
   /**
-   * Create an svg entity (currently ellipse) for each node.
+   * Create an svg entity (ellipse) for each node.
    *
    * @param svg svg selection- container
    * @param nodes data nodes to render as svg
@@ -187,7 +187,7 @@ export class CreateSvgService {
    *
    * @param nodes array of data nodes
    * @param link array of data links
-   * @returns source node, target node, and y-coordinate of link label
+   * @returns y-coordinate of link label
    */
   private labelY(nodes: SvgNode[], link: SvgLink): number {
     const sourceNode = nodes.filter((val, index) => {
@@ -232,6 +232,7 @@ export class CreateSvgService {
 
         const nodeDistance = sourceNode.x - targetNode.x;
 
+        // The line is an arc
         return `M ${sourceNode.x} ${sourceNode.y}
                 C ${sourceNode.x} ${sourceNode.y + nodeDistance * 0.4}
                   ${targetNode.x} ${targetNode.y + nodeDistance * 0.4}
@@ -248,15 +249,13 @@ export class CreateSvgService {
         return this.labelX(nodes, link);
       })
       .attr('y', (link: SvgLink) => {
-        // If the flow is in the opposite direction,
-        // then shift the line label to avoid overlap
         return this.labelY(nodes, link);
       })
       .attr('font-size', fontSize.toString())
       .text((link: SvgLink) => {
         return link.names[0];
       })
-      .append('tspan')
+      .append('tspan') // in case of two labels
       .attr('x', (link: SvgLink) => {
         return this.labelX(nodes, link);
       })

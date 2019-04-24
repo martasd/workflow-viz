@@ -7,6 +7,7 @@ import { SvgNode } from '.';
 export class SvgLink implements d3.SimulationLinkDatum<SvgNode> {
   index?: number;
 
+  // There may be multiple actions between a source and a target
   names: string[];
   // Source and target are indices into the nodes array
   source: string | number;
