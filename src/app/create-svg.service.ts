@@ -143,10 +143,10 @@ export class CreateSvgService {
         return node.y;
       })
       .attr('rx', radius * 1.5)
-      .attr('ry', radius)
-      .attr('fill', (node, index) => {
-        return color(index.toString());
-      });
+      .attr('ry', radius);
+    // .attr('fill', (node, index) => {
+    //   return color(index.toString());
+    // });
 
     // Create labels
     circleGroup
@@ -218,7 +218,7 @@ export class CreateSvgService {
     const lineData = svg.selectAll('link').data(links);
 
     // Create lines
-    const lineWidth: number = 2;
+    const lineWidth: number = 1;
     lineData
       .enter()
       .append('path')
