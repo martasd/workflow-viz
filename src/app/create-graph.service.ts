@@ -42,6 +42,7 @@ export class CreateGraphService {
     let currentNodeId: number;
     let targetNodeId: number;
     let actionName: string;
+    let autoAction: string;
     let nodeName: string;
     let currentLinkEnds: linkTuple = null;
     let linkFound: linkTuple;
@@ -76,6 +77,7 @@ export class CreateGraphService {
         }
         case 'action': {
           actionName = elem.attributes.name;
+          autoAction = elem.attributes.auto;
           break;
         }
         case 'unconditional-result': {
@@ -109,7 +111,7 @@ export class CreateGraphService {
           // Otherwise, create a brand new link
           if (linkFound) {
             linkFound[0].push(actionName);
-          } else {
+          } else if (!autoAction) {
             currentLinkEnds = [[actionName], currentNodeId, targetNodeId];
             linkEndsTuples.push(currentLinkEnds);
           }
