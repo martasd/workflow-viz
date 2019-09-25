@@ -1,5 +1,7 @@
 # Workflow-viz
 
+**WARNING: This project is currently not maintained.** 
+
 Visualizes XML Workflow Descriptor using SVG.
 
 See [Demo](https://martasd.github.io/workflow-viz) for a live example . To display a visualization, upload a workflow file from `test-input` directory such as `strate.xml`.
